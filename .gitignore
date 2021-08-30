@@ -1,5 +1,5 @@
-output
+output/iot/*
 .vscode
-data/iot
+data/iot/*
 PIC
 run_batch_sum.py
