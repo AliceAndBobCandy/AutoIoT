@@ -8,6 +8,7 @@ data/iot/q*
 data/iot/u*
 data/iot/w*
 data/iot/y*
+data/iot/tm*
 
 output/iot/d*
 output/iot/l*
@@ -19,6 +20,7 @@ output/iot/v*
 output/logs
 output/summariesTf
 output/trainTf
+output/*
 .vscode
 
 PIC
