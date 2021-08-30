@@ -1,5 +1,7 @@
 output/iot/*
-output/*
+output/logs
+output/summariesTf
+output/trainTf
 .vscode
 data/iot/*
 PIC
