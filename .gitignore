@@ -8,7 +8,7 @@ data/iot/q*
 data/iot/u*
 data/iot/w*
 data/iot/y*
-data/iot/tm*
+data/iot/*
 
 output/iot/d*
 output/iot/l*
