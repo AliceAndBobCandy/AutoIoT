@@ -1,4 +1,5 @@
 # early stop
+# author: Linna Fan
 import numpy as np
 
 class EarlyStopping:
