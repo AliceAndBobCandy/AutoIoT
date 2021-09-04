@@ -25,3 +25,4 @@ output/trainTf
 
 PIC
 run_batch_sum.py
+.gitignore
