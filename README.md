@@ -21,7 +21,8 @@ upsampling = False
 
 
 ## running method:
-```python run.py configs/iot/cfg_iot.py
+```
+python run.py configs/iot/cfg_iot.py
 ``` 
 
 
