@@ -1,5 +1,5 @@
 @author:fln
-this project is based on "Semi-Supervised Learning via Compact Latent Space Clustering". We change and apply it in IoT identification. Part of the codes is the same as "Semi-Supervised Learning via Compact Latent Space Clustering"
+this project is based on "Semi-Supervised Learning via Compact Latent Space Clustering". We change and apply it in IoT identification. Thanks for their codes.
 
 ## functions of dir
 output/: store output files
