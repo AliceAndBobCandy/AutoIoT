@@ -7,12 +7,12 @@ path = os.path.dirname(os.path.abspath(filename))
 pardir = os.path.dirname(os.path.dirname(path).replace("\\","/"))
 # Variables needed for pre-setting up the session.
 dataset_name = 'tmc' # 
-session_type = 'train' # can be train/test
+session_type = 'test' # can be train/test
 # ========== Variables needed for the session i24,2tself. ========
 # === Variables that are read from the cmd line too. ===
 # WARN: Values given in cmd line overwrite these given below.
 out_path = pardir + '/output/iot/'
-device = 2 # GPU device number,-1 is to use CPU
+device = 1 # GPU device number,-1 is to use CPU
 model_to_load = None # To start from pretrained model/continue training.
 plot_save_emb = 0 # Plot embedding if emb_size is 2D. 0: No. 1: save. 2: plot. 3: save & plot.
 
@@ -79,7 +79,7 @@ lr_piecewise_boundaries = None # Only for expon. When to change LR.
 lr_piecewise_values = None # Only for expon. Initial and following values.
 
 # --- Compact Clustering via Label Propagation (CCLP) ---
-cc_weight = 3 # Weight w in: Ltotal = Lsup + w*Lcclp . Set to 0 to disable CCLP.
+cc_weight = 5 # Weight w in: Ltotal = Lsup + w*Lcclp . Set to 0 to disable CCLP.
 cc_steps = 3 # Length of longest chain to optimize. Set to 0 to disable CCLP.
 # cc_loss_on = (cc_steps > 0) or (cc_weight > 0) # Set to False to disable.
 cc_loss_on = True
@@ -95,8 +95,8 @@ cc_sum_over_chains = True # If False, only the longest chain is optimized.
 cc_e_smooth = 0.00001
 cc_optim_smooth_mtx = True
 #===========================================find new devices=================================================
-# new_devices_list = [0,1] # if None, use all data, else the training set should exclude this list
-new_devices_list = None
+new_devices_list = [0,1] # if None, use all data, else the training set should exclude this list
+# new_devices_list = None
 if dataset_name == 'tmc':
     niot_label = 24
 else:

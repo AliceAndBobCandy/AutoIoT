@@ -136,8 +136,8 @@ class TrainerFlags(ConfigFlags):
         # added--------
         # --- multi task model ---
         self._params['use_multi_task_model'] = cfg_file_dict['use_multi_task_model']
-        
-        self._params['out_path'] = cfg_file_dict['out_path']
+        from configs.iot.cfg_iot import out_path
+        self._params['out_path'] = out_path
         #---------------------------------------------------------------------------
         # Supervised
         self._params['dynamic_loss_weight'] = cfg_file_dict['dynamic_loss_weight']

@@ -66,9 +66,9 @@ class New_devices(object):
         ##self._find_theta()
         self.filtered_iot_data_new = self._judge_devices(2)
         self.threshold = -1
-        # self.new_devices_num = self.get_new_type_num(1) # get the new type number, 1 is best(our method)
-        # if self.new_devices_num == -1:
-        #     return
+        self.new_devices_num = self.get_new_type_num(1) # get the new type number, 1 is best(our method)
+        if self.new_devices_num == -1:
+            return
         # self.old_label_new_label_dict = {}
         # self.adjust_model(2) # retrain the model
 
@@ -236,8 +236,8 @@ class New_devices(object):
             f_model_name = open(self.main_model_path + '/'+ model_folder_str + '/model_name','r')
             model_name = f_model_name.readline().rstrip('\n')
             f_model_name.close()
-            saver = tf.compat.v1.train.import_meta_graph(self.main_model_path +'/'+ model_folder_str + '/' + model_name + '.meta')
-            saver.restore(sess,tf.train.latest_checkpoint(self.main_model_path +'/'+ model_folder_str))
+            saver = tf.compat.v1.train.import_meta_graph(self.main_model_path + model_folder_str + '/' + model_name + '.meta')
+            saver.restore(sess,tf.train.latest_checkpoint(self.main_model_path + model_folder_str))
             graph = tf.compat.v1.get_default_graph()
             input_placeholder = sess.graph.get_tensor_by_name('eval_in:0')
             prediction = sess.graph.get_tensor_by_name('compute_logits_name_scope/fully_connected/BiasAdd:0')

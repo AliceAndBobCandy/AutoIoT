@@ -527,7 +527,7 @@ def train(sessionNModelFlags, trainerFlags, retrain=False, tl=False, cnn_type=No
     # print(val_samples)
     # print(val_labels)
 
-    with open(trainerFlags['out_path']+'/val_error_rate.txt','a') as f:
+    with open(trainerFlags['out_path']+'val_error_rate.txt','a') as f:
         f.write("===================================================================\n")
         f.write('multi label model = '+str(trainerFlags['use_multi_task_model'])+'\n')
         f.write('lbl percent = '+str(sessionNModelFlags['percent_lbl_samples'])+'\n')

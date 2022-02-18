@@ -18,7 +18,7 @@ import random
 # from yellowbrick.cluster import KElbowVisualizer
 import json
 from sklearn.cluster import DBSCAN
-from bayes_opt import BayesianOptimization
+# from bayes_opt import BayesianOptimization
 
 
 font={
