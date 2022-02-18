@@ -15,6 +15,7 @@ import json
 import math 
 from cclp.routines import train
 import time
+from configs.iot.cfg_iot import out_path
 
 theta_percentile = 0.99
 theta1 = 0.1
@@ -23,9 +24,10 @@ s0 = 5
 instances_culmulated = 24 * 2 * 2 # 2days, if we don't need set the culmulation time of new type devices instance, we can set it to -1
 # instances_culmulated = -1
 JUDGE_LEN = 3 # N_min
-REJUDGE_LEN = 1 # JUDGE_LEN + REJUDGE_LEN  = N_max
+REJUDGE_LEN = 2 # JUDGE_LEN + REJUDGE_LEN  = N_max
 store_analysis_iot_niot = True
 # wrong_iot_niot_labels = [-5,-6,-14]
+
 time0 = time.time()
 class New_devices(object):
     def __init__ (self,sessionNModelFlags, trainerFlags):
@@ -40,7 +42,8 @@ class New_devices(object):
         self.pathToDataFolder = local_dirs_to_data.iot
         self.record_data_index = sessionNModelFlags['record_data_index']
         self.merge_cnn_layer_method = sessionNModelFlags['merge_cnn_layer_methods']
-        self.main_model_path = './output/iot/trainTf/'
+        # self.main_model_path = './output/iot/trainTf/'
+        self.main_model_path = out_path + 'trainTf/'
         self.old_devices_data = pd.read_csv(self.pathToDataFolder +self.new_devices_postfix+'/old_devices_train_data.csv'.format(self.new_devices_postfix))
         
         self.column_names = list(self.old_devices_data.columns)
@@ -56,16 +59,18 @@ class New_devices(object):
         self.val_batch_size = sessionNModelFlags["eval_batch_size"]
         self.val_new_devices_flag = None
         self.seed = sessionNModelFlags["seed"]
-        self.inf_output_dir = "./output/iot/test_new_devices_multi_instance"
+        self.inf_output_dir = out_path + "test_new_devices_multi_instance"
+        if not os.path.exists(self.inf_output_dir):
+            os.makedirs(self.inf_output_dir)
         self.new_old_label_dict = self.get_new_old_label_dict()
         ##self._find_theta()
         self.filtered_iot_data_new = self._judge_devices(2)
         self.threshold = -1
-        self.new_devices_num = self.get_new_type_num(4) # get the new type number, 1 is best
-        if self.new_devices_num == -1:
-            return
-        self.old_label_new_label_dict = {}
-        self.adjust_model(2) # retrain the model
+        # self.new_devices_num = self.get_new_type_num(1) # get the new type number, 1 is best(our method)
+        # if self.new_devices_num == -1:
+        #     return
+        # self.old_label_new_label_dict = {}
+        # self.adjust_model(2) # retrain the model
 
     # get data of old test and new train
     def get_val_data_old_new(self):
@@ -278,7 +283,7 @@ class New_devices(object):
                 #     data_c_.to_csv(path_, index=False)
 
                 # record the wrong in new_devices_data_before_normalization
-                if store_analysis_iot_niot==True and self.record_data_index==True and label in wrong_iot_niot_labels:
+                if store_analysis_iot_niot==True and self.record_data_index==True:
                    data_c_['iot'] = iot_indicator
                    for idx,row in data_c_.iterrows():
                        index_i = int(row['index'])
