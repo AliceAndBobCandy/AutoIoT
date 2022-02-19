@@ -26,11 +26,15 @@ instances_culmulated = 24 * 2 * 2 # 2days, if we don't need set the culmulation 
 JUDGE_LEN = 3 # N_min
 REJUDGE_LEN = 2 # JUDGE_LEN + REJUDGE_LEN  = N_max
 store_analysis_iot_niot = True
+from cclp.data_utils.log_utils import init_log
+from configs.iot.cfg_iot import out_path
 # wrong_iot_niot_labels = [-5,-6,-14]
+logger = init_log(out_path + 'mylogs/test_new_devices_multi_instance.log','a')
 
 time0 = time.time()
 class New_devices(object):
     def __init__ (self,sessionNModelFlags, trainerFlags):
+        self.logger = logger
         self.sessionNModelFlags = sessionNModelFlags
         self.trainerFlags = trainerFlags
         self.use_cnn_layer_for_cluster = sessionNModelFlags['use_cnn_layer_for_cluster']
@@ -44,7 +48,7 @@ class New_devices(object):
         self.merge_cnn_layer_method = sessionNModelFlags['merge_cnn_layer_methods']
         # self.main_model_path = './output/iot/trainTf/'
         self.main_model_path = out_path + 'trainTf/'
-        self.old_devices_data = pd.read_csv(self.pathToDataFolder +self.new_devices_postfix+'/old_devices_train_data.csv'.format(self.new_devices_postfix))
+        self.old_devices_data = pd.read_csv(self.pathToDataFolder +self.new_devices_postfix +'/old_devices_train_data.csv'.format(self.new_devices_postfix))
         
         self.column_names = list(self.old_devices_data.columns)
         self.num_classes = int(np.max(self.old_devices_data['label'])) # only iot
@@ -195,29 +199,23 @@ class New_devices(object):
                 if type == 'c3_1':
                     k = k_cnn_layers[type]
                     relabeled_data = relabeled_data_cnn_layers[type]
-                    g = open(self.inf_output_dir + '/new_old_devices_identification_res({}-{}).txt'.format(type,self.merge_cnn_layer_method),'a')
-                    g.write('--------------using cnn layers for cluster,new_devices:{}, cnn_type:{}--------------\n'.format(self.new_devices_list,type))
+                    self.logger.info('--------------using cnn layers for cluster,new_devices:{}, cnn_type:{}--------------'.format(self.new_devices_list,type))
                     if relabeled_data is None:
-                        g.write('the cluster num is wrong, wrong cluster num:{}\n'.format(k))
+                        self.logger.info('the cluster num is wrong, wrong cluster num:{}'.format(k))
                         k_cnn_layers[type] = -1
                     else:
-                        g.write('optimal cluster num:{}\n'.format(k))
+                        self.logger.info('optimal cluster num:{}'.format(k))
                         relabeled_data.to_csv(self.pathToDataFolder + self.new_devices_postfix + '/relabeled_filtered_new_devices_train_data({}).csv'.format(type), index=False, header = self.column_names)
-                    g.close()
             return k_cnn_layers
 
         else:
-            k,relabeled_data = get_new_type_num_from_cluster(self.filtered_iot_data_new,type,path,None,self.merge_cnn_layer_method,self.use_cnn_layer_for_cluster)
-            g = open(self.inf_output_dir + '/new_old_devices_identification_res.txt','a')
+            k,relabeled_data = get_new_type_num_from_cluster(self.filtered_iot_data_new,type,path,None,self.merge_cnn_layer_method,self.use_cnn_layer_for_cluster,self.logger)
             if relabeled_data is None:
-                print('the cluster num is wrong, stop ...')
-                g.write('the cluster num is wrong, wrong cluster num for {}:{}({})\n'.format(self.new_devices_list,k,self.merge_cnn_layer_method))
-                g.close()
+                self.logger.info('the cluster num is wrong, wrong cluster num for {}:{}({})'.format(self.new_devices_list,k,self.merge_cnn_layer_method))
                 return -1
             else:
                 relabeled_data.to_csv(self.pathToDataFolder + self.new_devices_postfix + '/relabeled_filtered_new_devices_train_data({}).csv'.format(self.merge_cnn_layer_method), index=False, header = self.column_names)              
-                g.write('optimal cluster num for {}:{}\n'.format(self.new_devices_list,k))
-                g.close()
+                self.logger.info('optimal cluster num for {}:{}'.format(self.new_devices_list,k))
                 return k
 
     # judge instance of new devices and old devices according to theta and formula defined by me
@@ -234,7 +232,7 @@ class New_devices(object):
         with tf.Session() as sess:
             model_folder_str = '_'.join(str(item) for item in self.new_devices_list)
             f_model_name = open(self.main_model_path + '/'+ model_folder_str + '/model_name','r')
-            model_name = f_model_name.readline().rstrip('\n')
+            model_name = f_model_name.readline().rstrip('')
             f_model_name.close()
             saver = tf.compat.v1.train.import_meta_graph(self.main_model_path + model_folder_str + '/' + model_name + '.meta')
             saver.restore(sess,tf.train.latest_checkpoint(self.main_model_path + model_folder_str))
@@ -258,11 +256,8 @@ class New_devices(object):
             
             whole_num = 0
             identification_num = 0
-            if self.use_cnn_layer_for_cluster is True:
-                g = open(self.inf_output_dir + '/new_old_devices_identification_res(cnn_layers_cluster).txt','a')
-            else:
-                g = open(self.inf_output_dir + '/new_old_devices_identification_res.txt','a')
-            g.write("======================{}=======================\n".format(self.new_devices_postfix))
+            self.logger.info("======================{}=======================".format(self.new_devices_postfix))
+            self.logger.info("use_cnn_layer_for_cluster:{}".format(self.use_cnn_layer_for_cluster))
             for label in label_iot:
                 data_c_ = self.val_data[self.val_data['label']==label]
                 data_c = self.val_data[self.val_data['label']==label].values
@@ -294,8 +289,7 @@ class New_devices(object):
                 data_c_X_filtered = data_c_X[iot_indicator]
                 filtered_iot_data[label]['filtered_data'] = data_c_X_filtered
                 filtered_iot_data[label]['whole_num'] = data_c_X.shape[0]
-                print('label {}, iot identification accuracy:{}'.format(label,data_c_X_filtered.shape[0]/data_c_X.shape[0]))
-                g.write('label {}, iot identification accuracy:{}\n'.format(label,data_c_X_filtered.shape[0]/data_c_X.shape[0]))  
+                self.logger.info('label {}, iot identification accuracy:{}'.format(label,data_c_X_filtered.shape[0]/data_c_X.shape[0]))  
                 
                 whole_num += data_c_X.shape[0]
                 identification_num += data_c_X_filtered.shape[0]   
@@ -305,10 +299,9 @@ class New_devices(object):
                 new_devices_data_before_normalization.to_csv(self.pathToDataFolder + self.new_devices_postfix + '/new_devices_with_index_before_normalization_indicator.csv',index=False)   
             # compute overall accuracy
             iot_niot_accuracy_whole = identification_num/whole_num
-            print('whole iot/non-iot identification accuracy:{}'.format(iot_niot_accuracy_whole))
-            g.write('whole iot/non-iot identification accuracy:{}\n'.format(iot_niot_accuracy_whole))
+            self.logger.info('whole iot/non-iot identification accuracy:{}'.format(iot_niot_accuracy_whole))
             time1 = time.time()
-            g.write('iot identification time dur:{}\n'.format(time1-time0))
+            self.logger.info('iot identification time dur:{}'.format(time1-time0))
 
             # ---------------------------- also filter new_devices_test_data--------------------------------------, change
             filtered_iot_test_data = {label:{'filtered_data':[],'whole_num':0} for label in np.unique(self.new_devices_test_data_pd['label'])}
@@ -329,16 +322,14 @@ class New_devices(object):
                 data_c_X_filtered = data_c_X[iot_indicator]
                 filtered_iot_test_data[label]['filtered_data'] = data_c_X_filtered
                 filtered_iot_test_data[label]['whole_num'] = data_c_X.shape[0]
-                print('test label {}, iot identification accuracy:{}'.format(label,data_c_X_filtered.shape[0]/data_c_X.shape[0]))
-                g.write('test label {}, iot identification accuracy:{}\n'.format(label,data_c_X_filtered.shape[0]/data_c_X.shape[0]))  
+                self.logger.info('test label {}, iot identification accuracy:{}'.format(label,data_c_X_filtered.shape[0]/data_c_X.shape[0]))  
                 
                 whole_num += data_c_X.shape[0]
                 identification_num += data_c_X_filtered.shape[0]   
 
             # compute overall accuracy
             iot_niot_accuracy_whole = identification_num/whole_num
-            print('test whole iot/non-iot identification accuracy:{}'.format(iot_niot_accuracy_whole))
-            g.write('test whole iot/non-iot identification accuracy:{}\n'.format(iot_niot_accuracy_whole))
+            self.logger.info('test whole iot/non-iot identification accuracy:{}'.format(iot_niot_accuracy_whole))
             
             # -----------------------------find new iot devices---------------------------------------------------  
             
@@ -352,7 +343,7 @@ class New_devices(object):
                 
                 new_devices_str = '_'.join(str(item) for item in self.new_devices_list)
                 threshold = threshold_dict['threshold'] 
-                g.write('------------decide new devices or old devices from filted iot devices-------------\n')       
+                self.logger.info('------------decide new devices or old devices from filted iot devices-------------')       
                 for label in filtered_iot_data.keys():
                     data_c_X = filtered_iot_data[label]['filtered_data']
                     num_c = len(data_c_X)
@@ -388,7 +379,6 @@ class New_devices(object):
                             score = s0
                         i += 1
             elif type == 2: # judge according to KS test, put the result into label_result_dict, store filtered data into filter_iot_data_new
-                # g.write('\n==============================={}=============================\n'.format(self.new_devices_postfix))
                 known_probs = self.get_known_devices_max_probs()
                 #--------------------------------plot CDF------------------------------------------------
                 max_probs_filtered_iot = {label:[] for label in filtered_iot_data.keys()}
@@ -400,11 +390,11 @@ class New_devices(object):
                 # plot_cdf(known_probs,max_probs_filtered_iot,self.new_old_label_dict, self.main_model_path + self.new_devices_postfix + '/cdf.jpg')
                 # ----------------------------------------------------------------------------------------------
                 filtered_iot_data_new = {label:[] for label in filtered_iot_data.keys()}
-                g.write('------------decide new devices or old devices from filted iot devices-------------\n')  
+                self.logger.info('------------decide new devices or old devices from filted iot devices-------------')  
                 
                 
-                g.write('JUDGE_LEN:'+str(JUDGE_LEN)+'\n')
-                g.write('REJUDGE_LEN:'+str(REJUDGE_LEN)+'\n')
+                self.logger.info('JUDGE_LEN:'+str(JUDGE_LEN)+'')
+                self.logger.info('REJUDGE_LEN:'+str(REJUDGE_LEN)+'')
                 
                 for label in filtered_iot_data.keys():
                     data_c_X = filtered_iot_data[label]['filtered_data']
@@ -561,7 +551,7 @@ class New_devices(object):
         max_len = -1
         all_len = 0
         instance_num = 0
-        g.write("----------------------------new devices accuracy------------------------------\n")
+        self.logger.info("----------------------------new devices accuracy------------------------------")
         for label,items in label_result_dict.items():
             pred_results = items['res']
             pred_instance_lens = items['len']
@@ -580,19 +570,15 @@ class New_devices(object):
                     true_c += 1
             if all_c!=0:
                 accuracy_c = round(true_c/all_c,4)
-                print('accuracy of label {}:{}'.format(label,accuracy_c))
-                g.write('accuracy of label {}:{}\n'.format(label,accuracy_c))
+                self.logger.info('accuracy of label {}:{}'.format(label,accuracy_c))
         true_np = np.array(true)
         pred_np = np.array(pred)
         accuracy_all = round(np.sum(true_np==pred_np)/len(true),4)
-        print('overall accuracy:{}'.format(accuracy_all))
-        g.write('overall accuracy:{}\n'.format(accuracy_all))
+        self.logger.info('overall accuracy:{}'.format(accuracy_all))
         # compute the max len and average len of instances used to discriminate new devices or old devices
-        print('max len of instances for discrimination:{},average:{},judge_num:{}'.format(max_len,all_len/instance_num,instance_num))
-        g.write('max len of instances for discrimination:{},average:{},judge_num:{}\n'.format(max_len,all_len/instance_num,instance_num))
+        self.logger.info('max len of instances for discrimination:{},average:{},judge_num:{}'.format(max_len,all_len/instance_num,instance_num))
         time2 = time.time()
-        g.write('new device identification time dur:{}\n'.format(time2-time1))
-        g.close()
+        self.logger.info('new device identification time dur:{}'.format(time2-time1))
         return filtered_iot_data_new
 
     # adjust model according to self.new_devices_num, type==1:retrain; type==2:transfer learning; type==3:distill learning

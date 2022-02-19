@@ -10,7 +10,7 @@ def init_log(save_path, mode='w'):
         os.makedirs(parent_dir)
 
     logger = logging.getLogger()  # 不加名称设置root logger
-    level = logging.DEBUG
+    level = logging.INFO
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s: - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
     logger.setLevel(level)

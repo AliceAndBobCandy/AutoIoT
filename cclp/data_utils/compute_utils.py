@@ -328,7 +328,7 @@ def rf_cv(epsilon, minimum_samples):
 
 data_bo = None
 # return relabeled data
-def relabel_data(data_X,K,path,new_labels,data,type=1,cnn_type=None,merge_cnn_layer_method=' ',use_cnn_layer_for_cluster=False):
+def relabel_data(data_X,K,path,new_labels,data,type=1,cnn_type=None,merge_cnn_layer_method=' ',use_cnn_layer_for_cluster=False,logger=None):
     if type == 1: # elbow + kmeans
         SSE = []  # 存放每次结果的误差平方和
         Scores = []
@@ -387,14 +387,62 @@ def relabel_data(data_X,K,path,new_labels,data,type=1,cnn_type=None,merge_cnn_la
         pred_labels_set = list(np.unique(pred_labels))
         # find label map relationship of new_labels and kmeans labels
         if optimal_k == len(pred_labels_set):
-            pred_new_label_dict = {}
+            pred_new_label_dict = {} # store pred_label: new labels dict, it is the final res
+            used_new_label = [] 
+            new_label_to_attribute = []
+            new_label_in_pred_label_ratio = {}
+            pred_label_with_new_label_ratio = {}
             for pred_label in pred_labels_set:
+                logger.info(f"******** pred_label:{pred_label}")
+                pred_new_label_dict[pred_label] = []
                 pred_label_indices = np.where(pred_labels==pred_label)
                 new_label_corres = new_labels[pred_label_indices]
-                corres_label = max(list(new_label_corres),key=list(new_label_corres).count)
-                pred_new_label_dict[pred_label] = corres_label
-                # pred_labels = pred_labels.replace(pred_label,corres_label)
-                pred_labels[pred_labels==pred_label]=corres_label
+                if len(np.unique(new_label_corres)) > 1:
+                    logger.info(f"***** pred label {pred_label} cover {np.unique(new_label_corres)} true labels")
+                # compute the ratio in this cluster to the num of all new label instances
+                for new_label in np.unique(new_label_corres):
+                    num_this = np.sum(new_label_corres==new_label)
+                    num_all = np.sum(new_labels == new_label)
+                    logger.info(f"new label:{new_label}, num instances in this cluster/all new label instances:{num_this/num_all}")
+                    if new_label not in new_label_in_pred_label_ratio.keys():
+                        new_label_in_pred_label_ratio[new_label] = {}
+                    new_label_in_pred_label_ratio[new_label][pred_label] = num_this/num_all
+                    if pred_label not in pred_label_with_new_label_ratio.keys():
+                        pred_label_with_new_label_ratio[pred_label] = {}
+                    pred_label_with_new_label_ratio[pred_label][new_label] = num_this/num_all
+                # put the max ratio new label into pred label
+                items_ = pred_label_with_new_label_ratio[pred_label]
+                if len(items_) == 1:
+                    new_label_ = list(items_.keys())[0]
+                    used_new_label.append(new_label_)
+                    pred_new_label_dict[pred_label].append(new_label_)
+                    pred_labels[pred_labels==pred_label] = new_label_
+                    if new_label_ in new_label_to_attribute:
+                        new_label_to_attribute.remove(new_label_)
+                else: # find max ratio new_label_
+                    items_ = sorted(items_.items(),key=lambda x:x[1],reverse=True)
+                    keys_ = [items_[i][0] for i in range(len(items_))]
+                    keys_ = [item for item in keys_ if item not in used_new_label]
+                    used_new_label.append(keys_[0])
+                    new_label_to_attribute += keys_[1:]
+                    pred_new_label_dict[pred_label].append(keys_[0])
+                    pred_labels[pred_labels==pred_label] = keys_[0]
+                    if keys_[0] in new_label_to_attribute:
+                        new_label_to_attribute.remove(keys_[0])
+
+                    
+            # dispose left new labels
+            for new_label_ in new_label_to_attribute:
+                items_ = new_label_in_pred_label_ratio[new_label_]
+                items_ = sorted(items_.items(),key=lambda x:x[1],reverse=True)
+                key = items_[0][0]
+                pred_new_label_dict[key].append(new_label_)
+            logger.info(f'pred_label_new_label_dict:{pred_new_label_dict}')
+
+
+                # corres_label = max(list(new_label_corres),key=list(new_label_corres).count)
+                # pred_new_label_dict[pred_label] = corres_label
+                # pred_labels[pred_labels==pred_label]=corres_label
 
 
             print('============= cnn type:{}==============='.format(cnn_type))
@@ -449,47 +497,47 @@ def relabel_data(data_X,K,path,new_labels,data,type=1,cnn_type=None,merge_cnn_la
             delta_AIC.append(AIC[i+1]-AIC[i])
         return AIC.index(min(AIC)) + 2
     
-    elif type == 4: # dbscan + sihouette_score + bayesian optimization
-        global data_bo
-        data_bo = data_X
-        pbounds = {'epsilon': (0.00000001, 0.1),
-               'minimum_samples': (2, 10),
-            #    'leaf_size': (20, 40),
-               }
-        optimizer = BayesianOptimization(
-            f=rf_cv,  # 黑盒目标函数
-            pbounds=pbounds,  # 取值空间
-            verbose=2,  # verbose = 2 时打印全部，verbose = 1 时打印运行中发现的最大值，verbose = 0 将什么都不打印
-            random_state=1,
-        )
+    # elif type == 4: # dbscan + sihouette_score + bayesian optimization
+    #     global data_bo
+    #     data_bo = data_X
+    #     pbounds = {'epsilon': (0.00000001, 0.1),
+    #            'minimum_samples': (2, 10),
+    #         #    'leaf_size': (20, 40),
+    #            }
+    #     optimizer = BayesianOptimization(
+    #         f=rf_cv,  # 黑盒目标函数
+    #         pbounds=pbounds,  # 取值空间
+    #         verbose=2,  # verbose = 2 时打印全部，verbose = 1 时打印运行中发现的最大值，verbose = 0 将什么都不打印
+    #         random_state=1,
+    #     )
 
-        # init_points: 随机搜索的步数, n_iter: # 执行贝叶斯优化迭代次数
-        optimizer.maximize(init_points=1, n_iter=1)
-        # 得到最优的参数
-        optimize_params = optimizer.max['params']
-        dbscan_model = DBSCAN(eps=optimize_params['epsilon'], min_samples=optimize_params['minimum_samples'])
-        dbscan_model.fit(data_X)
-        pred_labels = dbscan_model.labels_  # 得到优化后的标签
-        optimal_k = len(np.unique(pred_labels))
-        pred_labels_set = list(np.unique(pred_labels))
-        # find label map relationship of new_labels and kmeans labels
-        new_labels = np.array(new_labels)
-        if optimal_k == len(np.unique(new_labels)):
-            pred_new_label_dict = {}
-            for pred_label in pred_labels_set:
-                pred_label_indices = np.where(pred_labels==pred_label)
-                new_label_corres = new_labels[pred_label_indices]
-                corres_label = max(list(new_label_corres),key=list(new_label_corres).count)
-                pred_new_label_dict[pred_label] = corres_label
-                # pred_labels = pred_labels.replace(pred_label,corres_label)
-                pred_labels[pred_labels==pred_label]=corres_label
-            # concat new label and data_X, then save the data
-            labels_ = pred_labels.reshape([-1,1])
-            data_r = np.concatenate([labels_,data],axis=1)
-            print("optimal_k is {}".format(optimal_k))
-            return optimal_k, pd.DataFrame(data_r)
-        else:
-            return optimal_k, None
+    #     # init_points: 随机搜索的步数, n_iter: # 执行贝叶斯优化迭代次数
+    #     optimizer.maximize(init_points=1, n_iter=1)
+    #     # 得到最优的参数
+    #     optimize_params = optimizer.max['params']
+    #     dbscan_model = DBSCAN(eps=optimize_params['epsilon'], min_samples=optimize_params['minimum_samples'])
+    #     dbscan_model.fit(data_X)
+    #     pred_labels = dbscan_model.labels_  # 得到优化后的标签
+    #     optimal_k = len(np.unique(pred_labels))
+    #     pred_labels_set = list(np.unique(pred_labels))
+    #     # find label map relationship of new_labels and kmeans labels
+    #     new_labels = np.array(new_labels)
+    #     if optimal_k == len(np.unique(new_labels)):
+    #         pred_new_label_dict = {}
+    #         for pred_label in pred_labels_set:
+    #             pred_label_indices = np.where(pred_labels==pred_label)
+    #             new_label_corres = new_labels[pred_label_indices]
+    #             corres_label = max(list(new_label_corres),key=list(new_label_corres).count)
+    #             pred_new_label_dict[pred_label] = corres_label
+    #             # pred_labels = pred_labels.replace(pred_label,corres_label)
+    #             pred_labels[pred_labels==pred_label]=corres_label
+    #         # concat new label and data_X, then save the data
+    #         labels_ = pred_labels.reshape([-1,1])
+    #         data_r = np.concatenate([labels_,data],axis=1)
+    #         print("optimal_k is {}".format(optimal_k))
+    #         return optimal_k, pd.DataFrame(data_r)
+    #     else:
+    #         return optimal_k, None
 
 
     elif type == 5: # silhouette_score + kmeans
@@ -542,7 +590,7 @@ def relabel_data(data_X,K,path,new_labels,data,type=1,cnn_type=None,merge_cnn_la
 
 # return cluster num of data, data:pd, type=1:kmeans, type=2:dbscan, type=3:KNN, filtered_cnn_emb: use the emb of cnn layer for cluster
 # filtered_cnn_emb: {label:{'c1_1':[],'c1_2':[],...}
-def get_new_type_num_from_cluster(data1,type,path=None,filtered_cnn_emb=None,merge_cnn_layer_method=' ',use_cnn_layer_for_cluster=False):
+def get_new_type_num_from_cluster(data1,type,path=None,filtered_cnn_emb=None,merge_cnn_layer_method=' ',use_cnn_layer_for_cluster=False,logger=None):
     data_o = None
     new_labels = []
     for label in data1.keys():
@@ -575,7 +623,7 @@ def get_new_type_num_from_cluster(data1,type,path=None,filtered_cnn_emb=None,mer
         return optimal_k_cnn_layers, data_r_cnn_layers
     else:
         data_X = dimension_reduction(data_o,1)
-        optimal_k, data_r = relabel_data(data_X,K,path,new_labels,data_o,type,None,' ',use_cnn_layer_for_cluster)
+        optimal_k, data_r = relabel_data(data_X,K,path,new_labels,data_o,type,None,' ',use_cnn_layer_for_cluster,logger)
         return optimal_k, data_r
     
     

@@ -12,7 +12,7 @@ session_type = 'test' # can be train/test
 # === Variables that are read from the cmd line too. ===
 # WARN: Values given in cmd line overwrite these given below.
 out_path = pardir + '/output/iot/'
-device = 1 # GPU device number,-1 is to use CPU
+device = -1 # GPU device number,-1 is to use CPU
 model_to_load = None # To start from pretrained model/continue training.
 plot_save_emb = 0 # Plot embedding if emb_size is 2D. 0: No. 1: save. 2: plot. 3: save & plot.
 
@@ -95,7 +95,7 @@ cc_sum_over_chains = True # If False, only the longest chain is optimized.
 cc_e_smooth = 0.00001
 cc_optim_smooth_mtx = True
 #===========================================find new devices=================================================
-new_devices_list = [0,1] # if None, use all data, else the training set should exclude this list
+new_devices_list = [1,7,9,18] # if None, use all data, else the training set should exclude this list
 # new_devices_list = None
 if dataset_name == 'tmc':
     niot_label = 24

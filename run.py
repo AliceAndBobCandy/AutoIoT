@@ -85,25 +85,25 @@ def override_file_cfg_with_cmd_cfg(cfg, cmd_args):
     if cfg['device'] is None:
         raise ValueError('Invalid device given in file and cmd: %s' % cfg['device'])
     
-def check_output_dir_ok( out_path, model_to_load ):# not used?
-    if os.path.exists(out_path) and model_to_load != "self":
-        user_input = None
-        try:
-            user_input = raw_input("The output directory exists already, and [-load] was NOT specified.\n"+\
-                                   "We may corrupt another session.\n" +\
-                                   "Output path given: "+str(out_path)+"\n"+\
-                                   "Are you sure you want to continue? [y/n] : ")
-            while user_input not in ['y','n']: 
-                user_input = raw_input("Please specify 'y' or 'n': ")
-        except:
-            print("\nERROR:\tOutput directory already exists. Tried to ask for user input whether to continue, but failed."+\
-                  "\n\tReason unknown (nohup? remote?)."+\
-                  "\n\tSpecify other dir and retry."+\
-                  "\n\tExiting."); exit(1)
-        if user_input == 'y':
-            pass
-        else:
-            print("Exiting as requested."); exit(0)
+# def check_output_dir_ok( out_path, model_to_load ):# not used?
+#     if os.path.exists(out_path) and model_to_load != "self":
+#         user_input = None
+#         try:
+#             user_input = raw_input("The output directory exists already, and [-load] was NOT specified.\n"+\
+#                                    "We may corrupt another session.\n" +\
+#                                    "Output path given: "+str(out_path)+"\n"+\
+#                                    "Are you sure you want to continue? [y/n] : ")
+#             while user_input not in ['y','n']: 
+#                 user_input = raw_input("Please specify 'y' or 'n': ")
+#         except:
+#             print("\nERROR:\tOutput directory already exists. Tried to ask for user input whether to continue, but failed."+\
+#                   "\n\tReason unknown (nohup? remote?)."+\
+#                   "\n\tSpecify other dir and retry."+\
+#                   "\n\tExiting."); exit(1)
+#         if user_input == 'y':
+#             pass
+#         else:
+#             print("Exiting as requested."); exit(0)
     
 def create_session_folders(main_out_dir): # create output dir according to main_out_dir
     # Must be given absolute dir.
@@ -124,6 +124,7 @@ def print_param(config_file):
         print(key,value)
 
 if __name__ == '__main__':
+    
     parser = setup_arg_parser()
     args = parser.parse_args()
     print('args',args)
