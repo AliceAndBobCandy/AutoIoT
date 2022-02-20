@@ -73,8 +73,8 @@ class New_devices(object):
         self.new_devices_num = self.get_new_type_num(1) # get the new type number, 1 is best(our method)
         if self.new_devices_num == -1:
             return
-        # self.old_label_new_label_dict = {}
-        # self.adjust_model(2) # retrain the model
+        self.old_label_new_label_dict = {}
+        self.adjust_model(2) # retrain the model
 
     # get data of old test and new train
     def get_val_data_old_new(self):

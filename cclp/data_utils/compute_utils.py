@@ -244,7 +244,8 @@ def get_optimal_k(sses,path=None):
 def get_optimal_k_from_slope(slopes,cnn_type=None,use_cnn_layer_for_cluster=False):
     print('use_cnn_layer_for_cluster',use_cnn_layer_for_cluster)
     if use_cnn_layer_for_cluster is False:
-        threshold = -100
+        # threshold = -100
+        threshold = -109.34
     else:
         threshold = -300
     # print('threshold',threshold)
