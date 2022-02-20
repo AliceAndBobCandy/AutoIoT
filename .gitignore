@@ -20,9 +20,8 @@ output/iot/v*
 output/logs
 output/summariesTf
 output/trainTf
-run_batch*
 .vscode
-test.py
+
 PIC
 run_batch_sum.py
 .gitignore
