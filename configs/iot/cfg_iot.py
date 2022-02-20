@@ -95,7 +95,7 @@ cc_sum_over_chains = True # If False, only the longest chain is optimized.
 cc_e_smooth = 0.00001
 cc_optim_smooth_mtx = True
 #===========================================find new devices=================================================
-new_devices_list = [1,7,9,18] # if None, use all data, else the training set should exclude this list
+new_devices_list = [0,4,21] # if None, use all data, else the training set should exclude this list
 # new_devices_list = None
 if dataset_name == 'tmc':
     niot_label = 24
