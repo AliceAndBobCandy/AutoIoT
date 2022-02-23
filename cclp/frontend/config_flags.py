@@ -95,7 +95,9 @@ class TrainSessionNModelFlags(ConfigFlags):
         self._params['classifier_dropout'] = cfg_file_dict['model']['classifier_dropout'] # Dropout at the classifier.
         
         # ================ TRAINING LOOP PARAMETERS ===================
-        main_out_dir = cfg_file_dict['out_path']
+        # main_out_dir = cfg_file_dict['out_path']
+        from configs.iot.cfg_iot import out_path
+        main_out_dir = out_path
         self._params['logdir'] = {"main": main_out_dir,
                                  "logs": os.path.join(main_out_dir, "logs"),
                                  "trainTf": os.path.join(main_out_dir, "trainTf"),

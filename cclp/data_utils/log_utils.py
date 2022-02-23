@@ -2,14 +2,14 @@ import os
 
 
 
-def init_log(save_path, mode='w'):
+def init_log(save_path, mode='w',logger_name = 'mylogs'):
     import logging
 
     parent_dir = os.path.dirname(save_path)
     if not os.path.exists(parent_dir):
         os.makedirs(parent_dir)
 
-    logger = logging.getLogger()  # 不加名称设置root logger
+    logger = logging.getLogger(logger_name)  # 不加名称设置root logger
     level = logging.INFO
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s: - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 

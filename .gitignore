@@ -26,3 +26,4 @@ PIC
 run_batch_sum.py
 .gitignore
 */__pycache__
+tmp.log

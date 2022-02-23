@@ -28,12 +28,12 @@ REJUDGE_LEN = 2 # JUDGE_LEN + REJUDGE_LEN  = N_max
 store_analysis_iot_niot = True
 from cclp.data_utils.log_utils import init_log
 from configs.iot.cfg_iot import out_path
-# wrong_iot_niot_labels = [-5,-6,-14]
-logger = init_log(out_path + 'mylogs/test_new_devices_multi_instance.log','a')
+
+
 
 time0 = time.time()
 class New_devices(object):
-    def __init__ (self,sessionNModelFlags, trainerFlags):
+    def __init__ (self,sessionNModelFlags, trainerFlags, logger):
         self.logger = logger
         self.sessionNModelFlags = sessionNModelFlags
         self.trainerFlags = trainerFlags
@@ -56,7 +56,7 @@ class New_devices(object):
         self.drop_label = self.num_classes
         self.val_data = self.get_val_data_old_new()
         
-        self.new_devices_test_data_pd = pd.read_csv(self.pathToDataFolder+self.new_devices_postfix+'/new_devices_train_data.csv') 
+        self.new_devices_test_data_pd = pd.read_csv(self.pathToDataFolder+self.new_devices_postfix+'/new_devices_test_data.csv') 
         
         
         # self.val_data.drop(self.val_data[self.val_data['label']==self.drop_label].index,inplace=True)
@@ -192,7 +192,7 @@ class New_devices(object):
         #         else:
         #             data = np.concatenate([data,self.filtered_iot_data_new[label]],axis=0)
         if self.use_cnn_layer_for_cluster is True:
-            k_cnn_layers,relabeled_data_cnn_layers = get_new_type_num_from_cluster(self.filtered_iot_data_new,type,path,self.filtered_cnn_emb,self.merge_cnn_layer_method,self.use_cnn_layer_for_cluster)
+            k_cnn_layers,relabeled_data_cnn_layers = get_new_type_num_from_cluster(self.filtered_iot_data_new,type,path,self.filtered_cnn_emb,self.merge_cnn_layer_method,self.use_cnn_layer_for_cluster,self.logger)
             # write to txt
             types = k_cnn_layers.keys()
             for type in types:
@@ -327,9 +327,9 @@ class New_devices(object):
                 whole_num += data_c_X.shape[0]
                 identification_num += data_c_X_filtered.shape[0]   
 
-            # compute overall accuracy
-            iot_niot_accuracy_whole = identification_num/whole_num
-            self.logger.info('test whole iot/non-iot identification accuracy:{}'.format(iot_niot_accuracy_whole))
+            # # compute overall accuracy
+            # iot_niot_accuracy_whole = identification_num/whole_num
+            # self.logger.info('test whole iot/non-iot identification accuracy:{}'.format(iot_niot_accuracy_whole))
             
             # -----------------------------find new iot devices---------------------------------------------------  
             
@@ -721,10 +721,12 @@ class New_devices(object):
                         prediction1 = sess.run(predictions_1,feed_dict={input_placeholder_x:train_X_batch,input_placeholder_y:train_y_batch})
         elif type == 2:# semi-supervised model retrain and not recover parameters
             tl = True # transfer learning flag          
-            self.sessionNModelFlags['max_iters'] = 1000
+            # self.sessionNModelFlags['max_iters'] = 2000
             sessionNModelFlags = self.sessionNModelFlags
             sessionNModelFlags['session_type'] = 'train'
             trainerFlags = self.trainerFlags
+            # trainerFlags['lr_expon_decay_factor'] = 0.8
+            # trainerFlags['lr_expon_decay_steps'] = 400
             sessionNModelFlags.print_params() #put session, model parameters into sessionNModelFlags class
             trainerFlags.print_params() # put training parameters into trainerFlags class
             
@@ -736,9 +738,9 @@ class New_devices(object):
                         train.train(sessionNModelFlags=sessionNModelFlags, trainerFlags=trainerFlags,retrain=True,tl=False,cnn_type=type) # core
                 
             else:
-                train.train(sessionNModelFlags=sessionNModelFlags, trainerFlags=trainerFlags,retrain=True,tl=tl) # core
+                train.train(sessionNModelFlags=sessionNModelFlags, trainerFlags=trainerFlags,retrain=True,tl=tl,cnn_type=sessionNModelFlags['merge_cnn_layer_methods'],logger=self.logger) # core
                 # also compare ordinary retraining
-                train.train(sessionNModelFlags=sessionNModelFlags, trainerFlags=trainerFlags,retrain=True,tl=False) # core
+                train.train(sessionNModelFlags=sessionNModelFlags, trainerFlags=trainerFlags,retrain=True,tl=False,cnn_type=sessionNModelFlags['merge_cnn_layer_methods'],logger=self.logger) # core
        
 
 

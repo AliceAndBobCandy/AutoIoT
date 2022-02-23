@@ -10,6 +10,7 @@
 
 from __future__ import division
 from __future__ import print_function
+from asyncio.log import logger
 # from imblearn.over_sampling import SMOTE
 
 
@@ -256,7 +257,7 @@ class DataManager(object):
 
 # added code
 class IotManager(DataManager):
-    def __init__(self, pathToDataFolder=None, boolOneHot=False, dtypeStrX="float", reshape=False, upsampling = False, epsilon=1e-3, num_least=100,seed=None,disturbe = True,prob = 0.5,percent_lbl_samples=0, new_devices_list = None,merged_devices_file = None,train_ratio = 0.7,retrain=False, dataset_name = 'tmc',record_data_index=False,niot_label=None,upsample_niot = -1,percent_lbl_samples_small=-1,lbl_samples_small=-1,cnn_type=None):
+    def __init__(self, pathToDataFolder=None, boolOneHot=False, dtypeStrX="float", reshape=False, upsampling = False, epsilon=1e-3, num_least=100,seed=None,disturbe = True,prob = 0.5,percent_lbl_samples=0, new_devices_list = None,merged_devices_file = None,train_ratio = 0.7,retrain=False, dataset_name = 'tmc',record_data_index=False,niot_label=None,upsample_niot = -1,percent_lbl_samples_small=-1,lbl_samples_small=-1,cnn_type=None,logger=None):
         DataManager.__init__(self)
         if pathToDataFolder is None:
             pathToDataFolder = local_dirs_to_data.iot
@@ -269,6 +270,7 @@ class IotManager(DataManager):
             else:
                 print('****************** dataset_name wrong **********************')
                 return
+        self.logger = logger
         self._column_names = list(pd.read_csv(pathToDataFolder + 'unsw.csv').columns)
         self._retrain = retrain
         self._dataset_name = dataset_name
@@ -341,13 +343,16 @@ class IotManager(DataManager):
             train_data_ = pd.read_csv(self._pathToDataFolder + self._new_devices_postfix + '/relabeled_filtered_new_devices_train_data({}).csv'.format(self._cnn_type))
         train_data = pd.read_csv(self._pathToDataFolder + self._new_devices_postfix + '/old_devices_train_data.csv')       
         test_data = pd.read_csv(self._pathToDataFolder + self._new_devices_postfix + '/old_devices_test_data.csv')
-        # test_data_ = pd.read_csv(self._pathToDataFolder + self._new_devices_postfix + '/new_devices_test_data.csv')
         test_data_ = pd.read_csv(self._pathToDataFolder + self._new_devices_postfix + '/filtered_new_devices_test_data.csv')
 
         train_data,test_data = rearrange_labels(train_data,train_data_,test_data,test_data_,self._pathToDataFolder + self._new_devices_postfix)
         
         train_data['generated_data'] = 1
         test_data['generated_data'] = 0
+        train_num_labels = np.unique(train_data['label'])
+        print(f'train data unique labels:{len(train_num_labels)}')
+
+
         raw_data = pd.concat([train_data,test_data],axis=0)
         print(raw_data.shape)
         if(self._upsampling==True):

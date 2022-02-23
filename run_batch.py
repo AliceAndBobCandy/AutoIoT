@@ -39,7 +39,7 @@ if dataset == 'unsw':
         time21 = time.time()
         try:
             print('tmc start new devices disposing {}'.format(new_devices_list))
-            os.system('python run.py configs/iot/cfg_iot.py -session_type {} -upsampling {} -dataset_name {} -merge_cnn_layer_methods {} -use_cnn_layer_for_cluster {} -new_devices_list {}'.format('test','1','tmc',None,'0',new_devices_list))
+            os.system('python run.py configs/iot/cfg_iot.py -session_type {} -upsampling {} -dataset_name {}  -new_devices_list {}'.format('test','1','tmc',new_devices_list))
         except Exception as e:
             print('there is something wrong when testing {}'.format(new_devices_list))
         time22 = time.time()

@@ -66,6 +66,11 @@ def eval_probability_distribution(logits):
 
 # observe prob_distri of devices, especially the new devices.
 def observe_prob_distri(prob_distri, labels, new_devices_list, path,old_new_label_dict):
+    font1 = {
+        'family':'Arial',
+        'weight':'medium',
+        'size':15
+    }
     if not os.path.exists(path):
         os.makedirs(path)
     # observe new_devices
@@ -108,6 +113,7 @@ def observe_prob_distri(prob_distri, labels, new_devices_list, path,old_new_labe
         # ax.set_xticks(np.arange(0,1,0.1))
         # ax.set_xticklabels(ax.get_xticks(), fontproperties) 
         # ax.set_yticklabels(ax.get_yticks(), fontproperties) 
+        plt.tight_layout()
         plt.savefig(path + '/{}.png'.format(device_name))
         
         plt.close()
@@ -346,7 +352,7 @@ def relabel_data(data_X,K,path,new_labels,data,type=1,cnn_type=None,merge_cnn_la
         X = range(1,K)
         path_ = path.split('sse')[0] + '/'
         plt.figure(figsize=(5,4),dpi=300)
-        plt.tick_params(labelsize=9)
+        plt.tick_params(labelsize=12)
         plt.xlabel('Number of cluser: k',fontdict=font)
         plt.ylabel('Minimal square error',fontdict=font)
         plt.plot(X,SSE,label='SSE',markersize=5,marker='o')
@@ -354,7 +360,8 @@ def relabel_data(data_X,K,path,new_labels,data,type=1,cnn_type=None,merge_cnn_la
         plt.grid(ls='--')
         # plt.ylabel('silhouette_score')
         # plt.plot(X,Scores,'o-')
-        # plt.vlines(2,0,3000,colors='black',linestyles='dashed') # changed
+        plt.vlines(2,0,400,colors='black',linestyles='dashed') # changed
+        plt.tight_layout()
         plt.savefig(path_ + 'elbow_{}_{}.png'.format(cnn_type,merge_cnn_layer_method))
         # plt.show()
 
@@ -417,7 +424,7 @@ def relabel_data(data_X,K,path,new_labels,data,type=1,cnn_type=None,merge_cnn_la
                     new_label_ = list(items_.keys())[0]
                     used_new_label.append(new_label_)
                     pred_new_label_dict[pred_label].append(new_label_)
-                    pred_labels[pred_labels==pred_label] = new_label_
+                    # pred_labels[pred_labels==pred_label] = new_label_
                     if new_label_ in new_label_to_attribute:
                         new_label_to_attribute.remove(new_label_)
                 else: # find max ratio new_label_
@@ -427,11 +434,10 @@ def relabel_data(data_X,K,path,new_labels,data,type=1,cnn_type=None,merge_cnn_la
                     used_new_label.append(keys_[0])
                     new_label_to_attribute += keys_[1:]
                     pred_new_label_dict[pred_label].append(keys_[0])
-                    pred_labels[pred_labels==pred_label] = keys_[0]
+                    # pred_labels[pred_labels==pred_label] = keys_[0]
                     if keys_[0] in new_label_to_attribute:
                         new_label_to_attribute.remove(keys_[0])
-
-                    
+                
             # dispose left new labels
             for new_label_ in new_label_to_attribute:
                 items_ = new_label_in_pred_label_ratio[new_label_]
@@ -440,11 +446,9 @@ def relabel_data(data_X,K,path,new_labels,data,type=1,cnn_type=None,merge_cnn_la
                 pred_new_label_dict[key].append(new_label_)
             logger.info(f'pred_label_new_label_dict:{pred_new_label_dict}')
 
-
                 # corres_label = max(list(new_label_corres),key=list(new_label_corres).count)
                 # pred_new_label_dict[pred_label] = corres_label
                 # pred_labels[pred_labels==pred_label]=corres_label
-
 
             print('============= cnn type:{}==============='.format(cnn_type))
             # compute the label prediction accracy, ==========================!!!!!!!!!!!!!!!
@@ -456,9 +460,14 @@ def relabel_data(data_X,K,path,new_labels,data,type=1,cnn_type=None,merge_cnn_la
                 true_pred_num_c = np.sum(true_pred_label_indices)
                 print('true_pred_label:{},num:{},ratio:{}'.format(true_label,np.sum(true_pred_num_c),true_pred_num_c*1.0/true_num_c))
 
+            # construct new pred labels
+            new_pred_labels = pred_labels
+            for pred_label,new_label in pred_new_label_dict.items():                    
+                new_pred_labels[new_pred_labels==pred_label] = new_label[0]
+
 
             # concat new label and data_X, then save the data
-            labels_ = pred_labels.reshape([-1,1])
+            labels_ = new_pred_labels.reshape([-1,1])
             data_r = np.concatenate([labels_,data],axis=1)
             print("optimal_k is {}".format(optimal_k))
             return optimal_k, pd.DataFrame(data_r)
@@ -600,9 +609,10 @@ def get_new_type_num_from_cluster(data1,type,path=None,filtered_cnn_emb=None,mer
                 data_o = data1[label]
                 # data = data[:instance_num]
             else:
-                data1_c = data1[label]
-                # data1_c = data1_c[:instance_num]
-                data_o = np.concatenate([data_o,data1_c],axis=0)
+                if len(data1[label]) > 0:
+                    data1_c = data1[label]
+                    # data1_c = data1_c[:instance_num]
+                    data_o = np.concatenate([data_o,data1_c],axis=0)
             new_labels += [label]*len(data1[label])
             # new_labels += [label]*instance_num
     K = 11
@@ -649,8 +659,15 @@ def get_delta_s(seq):
 #         print(result)
 #     return result
 def rearrange_labels(old_data_train,new_data_train,old_data_test,new_data_test,path):
+
+        # 
+        new_data_train_labels = np.unique(new_data_train['label'])
+        print(f'new data train labels num:{len(new_data_train_labels)}')
+        old_data_train_labels = np.unique(old_data_train['label'])
+        print(f'old data train labels num:{len(old_data_train_labels)}')
+
         new_rearange_label_dict = {}   
-        new_labels = np.unique(new_data_test['label'])
+        new_labels = np.unique(new_data_train['label']) # fmodify
         old_labels = np.unique(old_data_train['label'])
         label_non_iot_cur = np.max(old_labels)
         label_non_iot_new = len(new_labels) + np.max(old_labels)
@@ -669,6 +686,9 @@ def rearrange_labels(old_data_train,new_data_train,old_data_test,new_data_test,p
         with open(path + '/new_rearange_label_dict.json','w') as f:
             json.dump(new_rearange_label_dict,f)
             f.close()
+
+        
+
         return data_train, data_test
 
 
