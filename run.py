@@ -176,7 +176,8 @@ if __name__ == '__main__':
             sessionNModelFlags['retrain'] = True
             trainerFlags = TrainerFlags(cfg) # parameters about trainer
             log.info("================start testing new device finding==================")
-            new_devices = New_devices(sessionNModelFlags, trainerFlags,logger)
+            new_devices = New_devices(sessionNModelFlags, trainerFlags,logger) # we use
+            # new_devices = New_devices(sessionNModelFlags, trainerFlags)
 
             # new_devices.test_new_devices()
             # discriminator cannot be used 

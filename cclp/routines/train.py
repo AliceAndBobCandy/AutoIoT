@@ -232,7 +232,7 @@ def train(sessionNModelFlags, trainerFlags, retrain=False, tl=False, cnn_type=No
         early_stop_flag = True
     else:
         early_stop_flag = False
-    stopper = EarlyStopping(patience=5)
+    stopper = EarlyStopping(patience=3)
     # Up until here, everything is numpy. Tensorflow starts below:
     graph = tf.Graph()
     with graph.as_default():

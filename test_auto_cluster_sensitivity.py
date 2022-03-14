@@ -1,11 +1,11 @@
 '''
-auto cluster num test
+get number of wrong groups from different theta
 '''
 import numpy as np
 from cclp.data_utils.log_utils import init_log
 from configs.iot.cfg_iot import out_path
 
-logger = init_log(out_path + '/mylogs/threshold.log')
+logger = init_log(out_path + '/mylogs/threshold_sensitivity.log')
 
 
 slopes_unsw = [[-294.22962493387075, -31.63131959805341, -43.299996954431265, -16.12530522650212, -9.645292737626718, -25.047544024177554, -8.23443635723384, -4.398853337409342, -2.5641638116636862],
@@ -64,33 +64,6 @@ slopes_yt = [
 
 real_cluster_num_yt = [2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,3,3,3,3,4,4,4,4]
 
-# # compute turning point times
-# logger.info('***** times computation')
-# times1 = []
-# times2 = []
-
-# for i, slopes in enumerate(slopes_unsw):
-#     cluster_num = real_cluster_num[i]
-#     turning_point = cluster_num - 2
-#     time1 = slopes[turning_point]/slopes[turning_point+1]
-#     time2 = slopes[turning_point+1]/slopes[turning_point+2]
-#     times1.append(round(time1,4))
-#     times2.append(round(time2,4))
-# logger.info('** unsw')
-# logger.info(f'times_before:{times1}')
-# logger.info(f'times_after:{times2}')
-
-
-# for i, slopes in enumerate(slopes_yt):
-#     cluster_num = real_cluster_num_yt[i]
-#     turning_point = cluster_num - 2
-#     time1 = slopes[turning_point]/slopes[turning_point+1]
-#     time2 = slopes[turning_point+1]/slopes[turning_point+2]
-#     times1.append(round(time1,4))
-#     times2.append(round(time2,4))
-# logger.info('** yt')
-# logger.info(f'times_before:{times1}')
-# logger.info(f'times_after:{times2}')
 
 def obtain_wrong_num(cluster_num_real, slopes_all, threshold):
     '''the first ele whose value is bigger than the threshold'''
@@ -107,121 +80,29 @@ def obtain_wrong_num(cluster_num_real, slopes_all, threshold):
     wrong_num = [1 for i,j in zip(cluster_num_real,cluster_num_estimate) if i!=j]
     return np.sum(wrong_num)
 
-def obtain_wrong_num_from_part(cluster_num_real, slopes_all, threshold,part):
-    '''the first ele whose value is bigger than the threshold'''
-    # threshold = -100
-    cluster_num_estimate = []
-    
-    for slopes in slopes_all[:part]:
-        res = 1
-        for idx, slope in enumerate(slopes):
-            if slope < threshold and slopes[idx+1] > threshold:
-                res = idx + 2
-        cluster_num_estimate.append(res)
+def main():
+    logger.info('unsw')
+    theta_unsw = -115.9
+    interval = 2
+    thetas = [theta_unsw - i*interval for i in range(-4,5)]
+    for theta in thetas:
+        wrong_group = obtain_wrong_num(real_cluster_num_unsw,slopes_unsw,theta)
+        logger.info(f'theta:{theta},wrong_group_num:{wrong_group}')
 
-    wrong_num = [1 for i,j in zip(cluster_num_real[:part],cluster_num_estimate) if i!=j]
-    return np.sum(wrong_num)
+    logger.info('yt')
+    theta_yt = -97.53
+    interval = 2
+    thetas = [theta_yt - i*interval for i in range(-4,5)]
+    for theta in thetas:
+        wrong_group = obtain_wrong_num(real_cluster_num_yt,slopes_yt,theta)
+        logger.info(f'theta:{theta},wrong_group_num:{wrong_group}')
 
-def find_threshold(before, after, cluster_num_real, slopes_all, used_group_num):
-    '''return each threshold and the corresponding wrong group num, before + delta, after - delta'''
-    # part_num = int(len(slopes_all)/2)
-    
-    res = {}
-    res_part = {}
-    
-    mean_before = np.mean(before[:used_group_num])
-    mean_after = np.mean(after[:used_group_num])
-
-    # compute delta
-    related_slopes = []
-    for before_i in before:
-        if before_i > mean_before and before_i < mean_after:
-            related_slopes.append(before_i)
-    for after_i in after:
-        if after_i > mean_before and after_i < mean_after:
-            related_slopes.append(after_i)
-    related_slopes = sorted(related_slopes)
-    # logger.info(f'related slopes:{related_slopes}')
-    deltas = [related_slopes[i+1] - related_slopes[i] for i in range(len(related_slopes)-1)]
-    delta = round(min(deltas)/2,2)
-    logger.info(f'deltas:{deltas}')
-    logger.info(f'delta:{delta}')
-
-    for before_i in before[:used_group_num]:
-        if before_i > mean_before and before_i < mean_after:
-            threshold = round(before_i + delta,2)
-            # compute wrong num
-            wrong_num = obtain_wrong_num(cluster_num_real,slopes_all,threshold)
-            wrong_num_part = obtain_wrong_num_from_part(cluster_num_real,slopes_all,threshold,used_group_num)
-            res[threshold] = wrong_num
-            res_part[threshold] = wrong_num_part
-    
-    # for after_i in after[:used_group_num]:
-    #     if after_i > mean_before and after_i < mean_after:
-    #         threshold = round(after_i - delta,2)
-    #         # compute wrong num
-    #         wrong_num = obtain_wrong_num(cluster_num_real,slopes_all,threshold)
-    #         wrong_num_part = obtain_wrong_num_from_part(cluster_num_real,slopes_all,threshold,used_group_num)
-    #         res[threshold] = wrong_num
-    #         res_part[threshold] = wrong_num_part
-
-    return res,res_part
+if __name__ == '__main__':
+    main()
 
 
 
 
-# compute value before turning point and after turning point
-logger.info('***** slope computation')
-logger.info('** unsw')
-before = []
-after = []
 
-for i, slopes in enumerate(slopes_unsw):
-    cluster_num = real_cluster_num_unsw[i]
-    turning_point = cluster_num - 2
-    before.append(round(slopes[turning_point],4))
-    after.append(round(slopes[turning_point + 1],4))
-
-logger.info(f'slopes before:{before}')
-logger.info(f'slopes after:{after}')
-
-logger.info(f'mean of before:{np.mean(before)}')
-logger.info(f'mean of after:{np.mean(after)}')
-
-logger.info(f'max before:{max(before)}')
-logger.info(f'min after:{min(after)}')
-
-used_group_num_all = list(range(2,17))
-for used_group_num in used_group_num_all:
-    logger.info(f'***** used group num:{used_group_num}')
-    threshold_wrong_num_dict, threshold_wrong_num_part_dict = find_threshold(before,after,real_cluster_num_unsw,slopes_unsw,used_group_num)
-    logger.info(threshold_wrong_num_dict)
-    logger.info(f"res_part:{threshold_wrong_num_part_dict}")
-
-
-logger.info('** yt')
-before = []
-after = []
-for i, slopes in enumerate(slopes_yt):
-    cluster_num = real_cluster_num_yt[i]
-    turning_point = cluster_num - 2
-    before.append(round(slopes[turning_point],4))
-    after.append(round(slopes[turning_point + 1],4))
-
-logger.info(f'slopes before:{before}')
-logger.info(f'slopes after:{after}')
-
-logger.info(f'mean of before:{np.mean(before)}')
-logger.info(f'mean of after:{np.mean(after)}')
-
-logger.info(f'max before:{max(before)}')
-logger.info(f'min after:{min(after)}')
-
-
-for used_group_num in used_group_num_all:
-    logger.info(f'***** used group num:{used_group_num}')
-    threshold_wrong_num_dict,threshold_wrong_num_part_dict = find_threshold(before,after,real_cluster_num_yt,slopes_yt,used_group_num)
-    logger.info(threshold_wrong_num_dict)
-    logger.info(f"res_part:{threshold_wrong_num_part_dict}")
 
 

@@ -68,6 +68,8 @@ class New_devices(object):
             os.makedirs(self.inf_output_dir)
         self.new_old_label_dict = self.get_new_old_label_dict()
         ##self._find_theta()
+
+        # self.observe_max_probs_of_devices()
         self.filtered_iot_data_new = self._judge_devices(2)
         self.threshold = -1
         self.new_devices_num = self.get_new_type_num(1) # get the new type number, 1 is best(our method)
@@ -94,6 +96,39 @@ class New_devices(object):
         for key,value in old_new_label_dict.items():
             new_old_label_dict[int(value)] = int(key)
         return new_old_label_dict
+
+    def observe_max_probs_of_devices(self):
+        from cclp.data_utils import compute_utils
+        threshold = 0.8
+        self.val_samples = self.val_data[:,1:]
+        path = self.main_model_path + self.new_devices_postfix
+        with open(path + '/model_name','r') as f:
+            model_name = f.readline().strip('\n')
+
+        with tf.Session() as sess:
+            saver = tf.compat.v1.train.import_meta_graph(self.main_model_path + self.new_devices_postfix + '/' + model_name + '.meta')
+            saver.restore(sess, tf.train.latest_checkpoint(self.main_model_path + self.new_devices_postfix))
+            graph = tf.compat.v1.get_default_graph()
+            # need input and pred value
+            # model = graph.get_operation_by_name('model.forward_')
+            input_placeholder = sess.graph.get_tensor_by_name('eval_in:0')
+            prediction = sess.graph.get_tensor_by_name('compute_logits_name_scope/fully_connected/BiasAdd:0')
+            eval_pred_logits = None # list of embeddings for each val batch: [ [batchSize, 10], .... [bs, 10] ]       
+                      
+            for i in range(0, len(self.val_samples), self.val_batch_size):         
+                pred_logits = sess.run(prediction,feed_dict = {input_placeholder:self.val_samples[i:i+self.val_batch_size]})
+                val_new_device_flags = compute_utils.get_new_devices_flag(pred_logits,self.val_labels[i:i+self.val_batch_size],threshold)
+                if (eval_pred_logits is None):
+                    eval_pred_logits = pred_logits                   
+                    self.val_new_devices_flag = val_new_device_flags         
+                else:    
+                    eval_pred_logits = np.concatenate([eval_pred_logits,pred_logits],axis = 0)
+                    self.val_new_devices_flag = np.concatenate([self.val_new_devices_flag,val_new_device_flags],axis = 0)
+            
+        eval_prob_distri = compute_utils.eval_probability_distribution(eval_pred_logits)
+        compute_utils.observe_prob_distri(eval_prob_distri,self.val_labels,self.new_devices_list,self.prob_fig,self.old_new_device_label_dict)
+        print("finish getting prob distribution of new devices") 
+
 
     # find theta according to old data and store it to a json file named theta.json
     def _find_theta(self):
@@ -387,7 +422,7 @@ class New_devices(object):
                     pred_logits = sess.run(prediction,feed_dict={input_placeholder:data_c_X})
                     max_prob = get_max_probs(pred_logits)
                     max_probs_filtered_iot[label] += max_prob
-                # plot_cdf(known_probs,max_probs_filtered_iot,self.new_old_label_dict, self.main_model_path + self.new_devices_postfix + '/cdf.jpg')
+                # plot_cdf(known_probs,max_probs_filtered_iot,self.new_old_label_dict, self.main_model_path + self.new_devices_postfix + '/cdf.pdf')
                 # ----------------------------------------------------------------------------------------------
                 filtered_iot_data_new = {label:[] for label in filtered_iot_data.keys()}
                 self.logger.info('------------decide new devices or old devices from filted iot devices-------------')  
