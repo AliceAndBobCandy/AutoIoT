@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# changed by Linna Fan: data sample idea: split data into train and test, train data's Y_generated == 1, which can be resampled. then in sample process, val data can only be 
+# changed by Linna Fan: data sample idea: split data into train and test, train data's Y_generated == 1, which can be resampled. 
 # get through data which Y_generated == 0, after that, train data can be got through left data.
 
 # Copyright (c) 2018, Konstantinos Kamnitsas

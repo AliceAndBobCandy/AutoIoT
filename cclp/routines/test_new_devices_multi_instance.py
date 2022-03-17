@@ -422,7 +422,7 @@ class New_devices(object):
                     pred_logits = sess.run(prediction,feed_dict={input_placeholder:data_c_X})
                     max_prob = get_max_probs(pred_logits)
                     max_probs_filtered_iot[label] += max_prob
-                # plot_cdf(known_probs,max_probs_filtered_iot,self.new_old_label_dict, self.main_model_path + self.new_devices_postfix + '/cdf.pdf')
+                plot_cdf(known_probs,max_probs_filtered_iot,self.new_old_label_dict, self.main_model_path + self.new_devices_postfix + '/cdf.pdf')
                 # ----------------------------------------------------------------------------------------------
                 filtered_iot_data_new = {label:[] for label in filtered_iot_data.keys()}
                 self.logger.info('------------decide new devices or old devices from filted iot devices-------------')  

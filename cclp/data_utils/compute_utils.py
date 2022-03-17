@@ -49,15 +49,15 @@ device_list = [
     "Withings Smart Baby Monitor","Withings Smart scale","Withings Baby Monitor",
     "Non-IoT Device"
 ]
-device_list = ['Google OnHub', 'Samsung SmartThings Hub', 'Philips HUE Hub', 'Insteon Hub', 'Sonos', 
-'Securifi Almond', 'Nest Camera', 'Belkin WeMo Motion Sensor', 'LIFX Virtual Bulb', 'Belkin WeMo Switch', 
-'Amazon Echo', 'Belkin Netcam', 'Ring Doorbell', 'Roku TV', 'Roku 4', 'Amazon Fire TV', 'nVidia Shield', 
-'Apple TV (4th Gen)', 'Belkin WeMo Link', 'Netgear Arlo Camera', 'D-Link DCS-5009L Camera', 
-'Logitech Logi Circle', 'Canary', 'Piper NV [23]', 'Withings Home', 'WeMo Crockpot', 'MiCasaVerde VeraLite',
-'Chinese Webcam', 'August Doorbell Cam', 'TP-Link WiFi Plug', 'Chamberlain myQ Garage Opener', 
-'Logitech Harmony Hub', 'Caseta Wireless Hub', 'Google Home Mini', 'Google Home', 'Bose SoundTouch 10', 
-'Harmon Kardon Invoke', 'Apple HomePod', 'Roomba', 'Samsung SmartTV', 'Koogeek Lightbulb', 
-'TP-Link Smart WiFi LED Bulb', 'Wink 2 Hub', 'Nest Cam IQ', 'Nest Guard', 'Non-IoT devices']
+# device_list = ['Google OnHub', 'Samsung SmartThings Hub', 'Philips HUE Hub', 'Insteon Hub', 'Sonos', 
+# 'Securifi Almond', 'Nest Camera', 'Belkin WeMo Motion Sensor', 'LIFX Virtual Bulb', 'Belkin WeMo Switch', 
+# 'Amazon Echo', 'Belkin Netcam', 'Ring Doorbell', 'Roku TV', 'Roku 4', 'Amazon Fire TV', 'nVidia Shield', 
+# 'Apple TV (4th Gen)', 'Belkin WeMo Link', 'Netgear Arlo Camera', 'D-Link DCS-5009L Camera', 
+# 'Logitech Logi Circle', 'Canary', 'Piper NV [23]', 'Withings Home', 'WeMo Crockpot', 'MiCasaVerde VeraLite',
+# 'Chinese Webcam', 'August Doorbell Cam', 'TP-Link WiFi Plug', 'Chamberlain myQ Garage Opener', 
+# 'Logitech Harmony Hub', 'Caseta Wireless Hub', 'Google Home Mini', 'Google Home', 'Bose SoundTouch 10', 
+# 'Harmon Kardon Invoke', 'Apple HomePod', 'Roomba', 'Samsung SmartTV', 'Koogeek Lightbulb', 
+# 'TP-Link Smart WiFi LED Bulb', 'Wink 2 Hub', 'Nest Cam IQ', 'Nest Guard', 'Non-IoT devices']
 
 
 cMap = ['red', 'coral', 'cornflowerblue', 'deepskyblue']
@@ -123,7 +123,7 @@ def observe_prob_distri(prob_distri, labels, new_devices_list, path,old_new_labe
         # ax.set_xticklabels(ax.get_xticks(), fontproperties) 
         # ax.set_yticklabels(ax.get_yticks(), fontproperties) 
         plt.tight_layout()
-        plt.savefig(path + '/{}.pdf'.format(device_name))
+        plt.savefig(path + '/{}.png'.format(device_name))
         
         plt.close()
     old_devices_list = [int(item) for item in labels if item >=0]
@@ -370,7 +370,7 @@ def relabel_data(data_X,K,path,new_labels,data,type=1,cnn_type=None,merge_cnn_la
         path_ = path.split('sse')[0] + '/'
         plt.figure(figsize=(5,4),dpi=300)
         plt.tick_params(labelsize=14)
-        plt.xlabel('Number of cluser: k',fontdict=font1)
+        plt.xlabel('Number of clusters: k',fontdict=font1)
         plt.ylabel('Minimal square error',fontdict=font1)
         plt.plot(X,SSE,label='SSE',markersize=5,marker='o')
         
@@ -771,7 +771,7 @@ def plot_cdf(known_probs,max_prob_label_dict,new_old_label_dict,path):
     label_set = [-1000,-1,0]
 
     plt.rcParams.update(plt.rcParamsDefault)
-    plt.figure(figsize=(5,4.5),dpi=300)
+    plt.figure(figsize=(4.5,4.5),dpi=300)
     plt.tick_params(labelsize=14)
     plt.xlim(0,1.1)
     plt.ylim(0,1.1)
@@ -797,8 +797,8 @@ def plot_cdf(known_probs,max_prob_label_dict,new_old_label_dict,path):
             ecdf_x.insert(0,added_value)
             ecdf_y.insert(0,0)
         plt.plot(ecdf_x,ecdf_y,linewidth=1.5,color=cMap[idx],label=device_list[new_old_label_dict[label]],alpha=0.8)
-    plt.legend(bbox_to_anchor=(0.26, 1.02), loc=3, borderaxespad=0, fontsize=12) #prop={'size':6},
-    # plt.legend(loc=2, fontsize=12) 
+    # plt.legend(bbox_to_anchor=(1.01,1.2), borderaxespad=0, fontsize=12,ncol=2) #prop={'size':6},
+    plt.legend(bbox_to_anchor=(1,1.02), borderaxespad=0,loc='lower right',fontsize=12) 
     plt.tight_layout()
     plt.savefig(path)
 

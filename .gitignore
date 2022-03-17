@@ -20,6 +20,9 @@ output/iot/v*
 output/logs
 output/summariesTf
 output/trainTf
+dispose_check*
+time_information.txt
+test_auto*
 .vscode
 
 PIC
@@ -27,3 +30,4 @@ run_batch_sum.py
 .gitignore
 */__pycache__
 tmp.log
+
