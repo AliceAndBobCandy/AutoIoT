@@ -1,4 +1,5 @@
 backup
+backup/run_batch.py
 data/*
 run_batch.py
 dispose_checkpoint.py
