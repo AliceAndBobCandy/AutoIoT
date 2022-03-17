@@ -1,3 +1,6 @@
+dispose_check*
+time_information.txt
+test_auto*
 data/iot/0_*
 data/iot/1*
 data/iot/2*
@@ -20,9 +23,7 @@ output/iot/v*
 output/logs
 output/summariesTf
 output/trainTf
-dispose_check*
-time_information.txt
-test_auto*
+
 .vscode
 
 PIC
