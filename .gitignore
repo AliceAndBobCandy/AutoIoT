@@ -20,6 +20,10 @@ output/iot/v*
 output/logs
 output/summariesTf
 output/trainTf
+test*
+tmp.log
+time*
+dispose*
 .vscode
 
 PIC
