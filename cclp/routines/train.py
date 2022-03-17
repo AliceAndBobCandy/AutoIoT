@@ -38,21 +38,15 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score, precision_score,f1_score,recall_score
 from configs import local_dirs_to_data
 from cclp.neuralnet.models.utils import EarlyStopping
+from configs.iot.cfg_iot import out_path
 
 
 import json
 
-plot_tsne_flag = True
+plot_tsne_flag = False
 
 score_micro_flag = False
-score_micro = []
-score = {"accuracy_score":0,"precision_score":{},"recall_score":{},"f1_score":{}}
 
-val_error_recorder = []
-val_error_timer = []
-new_devices_accuracy = {} # accuracy dict of new_devices in new_devices_list
-
-cm_final = None
 ## compute last 2 value,if last value exceed a threshold,we assume it is a NoT then its label is 24, 
 # else it is determined by argmax() of the 0-24 value, input is the a batch of logits result of neural network,
 # result is the list of final lbls
@@ -143,8 +137,35 @@ def get_lbls_of_multi_task_model4(data,data2,num_classes=25,threshold=0.7):#data
     return final_lbls
 
 # load data-> build model-> train model -> validation
-def train(sessionNModelFlags, trainerFlags, retrain=False, tl=False, cnn_type=None):
+def train(sessionNModelFlags, trainerFlags, retrain=False, tl=False, cnn_type=None,logger=None):
+    
+    from cclp.data_utils.log_utils import init_log
+    if logger is None:
+        logger = init_log(out_path + 'mylogs/train.log','a','train')
+    logger.info("===================================================================")
+    logger.info('multi label model = '+str(trainerFlags['use_multi_task_model']))
+    logger.info('lbl percent = '+str(sessionNModelFlags['percent_lbl_samples']))
+    logger.info('threshold = '+str(sessionNModelFlags['threshold']))
+    logger.info('cc_loss_on ='+str(trainerFlags['cc_loss_on']))
+    logger.info('dynamic_loss_weight ='+str(trainerFlags['dynamic_loss_weight']))
+    
+    if sessionNModelFlags['new_devices_list'] is not None:
+        new_devices_str = ','.join(str(item) for item in sessionNModelFlags['new_devices_list'])
+        logger.info('new_devices_list = {}'.format(new_devices_str))
+    logger.info('retrain = ' + str(sessionNModelFlags['retrain']) )
+    logger.info('transfer_learing = ' + str(tl))
+    logger.info('use_cnn_layer_for_cluster:{}'.format(str(sessionNModelFlags['use_cnn_layer_for_cluster'])))
+    logger.info('cnn_type:{}'.format(cnn_type))
+
     global score
+    score_micro = []
+    score = {"accuracy_score":0,"precision_score":{},"recall_score":{},"f1_score":{}}
+
+    val_error_recorder = []
+    val_error_timer = []
+    new_devices_accuracy = {} # accuracy dict of new_devices in new_devices_list
+
+    cm_final = None
     eval_emb_all = []
     val_error_rate = []
     tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.WARN) # set to INFO for more exhaustive.
@@ -207,6 +228,10 @@ def train(sessionNModelFlags, trainerFlags, retrain=False, tl=False, cnn_type=No
         sessionNModelFlags['n_lbl_per_class_per_batch'] = sessionNModelFlags['num_lbl_samples']//num_classes
     
     # early stop
+    if retrain == True:
+        early_stop_flag = True
+    else:
+        early_stop_flag = False
     stopper = EarlyStopping(patience=3)
     # Up until here, everything is numpy. Tensorflow starts below:
     graph = tf.Graph()
@@ -290,14 +315,14 @@ def train(sessionNModelFlags, trainerFlags, retrain=False, tl=False, cnn_type=No
             else:
                 LOG.info("Initializing all vars...")
                 tf.global_variables_initializer().run() # must run
-        LOG.info(".......................................................................\n")
+        LOG.info(".......................................................................")
         
         coordinator = tf.train.Coordinator() # Coordinates the threads. Starts and stops them.
         threads = tf.train.start_queue_runners(sess=sess, coord=coordinator) # Start the slicers/batchers registered in cclp.sampling.samplers.
-        time_start = time.clock()
+        time_start = time.time()
         LOG.info("====================================================================")
         LOG.info("================== Starting training iterations ====================")
-        LOG.info("====================================================================\n")
+        LOG.info("====================================================================")
         model_step = model.get_t_step().eval(session=sess)
         best_accuracy = 0
         while model_step < sessionNModelFlags["max_iters"] :
@@ -328,6 +353,7 @@ def train(sessionNModelFlags, trainerFlags, retrain=False, tl=False, cnn_type=No
                 print(model_step)
             # if (model_step) == sessionNModelFlags["max_iters"]:
             if (model_step) % sessionNModelFlags["val_interval"] == 0 or model_step == 100:
+                logger.info(f'step:{model_step}')
             #     print(model_step)
                 LOG.info('Step: %d' % model_step)
                 summary_writer.add_summary(summaries, model_step) # log TRAINING metrics.
@@ -417,8 +443,7 @@ def train(sessionNModelFlags, trainerFlags, retrain=False, tl=False, cnn_type=No
                     eval_summary = tf.Summary( value=[ tf.Summary.Value( tag=str_val_or_test+' Err', simple_value=eval_err) ] )
                     summary_writer.add_summary(eval_summary, model_step)
                     summary_writer.add_summary(summaries_eval, model_step)
-                    # if stopper.step(1-eval_err):
-                    #     break
+                    
                     #------------------------------------score--------------------------------------
                     if score_micro_flag == False:
                         if sessionNModelFlags['record_best_score']:
@@ -440,13 +465,13 @@ def train(sessionNModelFlags, trainerFlags, retrain=False, tl=False, cnn_type=No
                             metric_aver_list = ["macro","micro","weighted"]
                             metric_str_list = ["accuracy_score", "precision_score","f1_score","recall_score"]
                             metric_list = [accuracy_score, precision_score,f1_score,recall_score]
-                            if model_step == sessionNModelFlags["max_iters"]:
-                                for metric_str,metric in zip(metric_str_list,metric_list):
-                                    if metric == accuracy_score:
-                                        score["accuracy_score"] = metric(val_labels,eval_pred_lbls)
-                                    else:
-                                        for metric_aver in metric_aver_list:
-                                            score[metric_str][metric_aver] = metric(val_labels,eval_pred_lbls,average=metric_aver)
+                            # if model_step == sessionNModelFlags["max_iters"]:
+                            for metric_str,metric in zip(metric_str_list,metric_list):
+                                if metric == accuracy_score:
+                                    score["accuracy_score"] = metric(val_labels,eval_pred_lbls)
+                                else:
+                                    for metric_aver in metric_aver_list:
+                                        score[metric_str][metric_aver] = metric(val_labels,eval_pred_lbls,average=metric_aver)
                     else:
                         score_micro.append(accuracy_score(val_labels,eval_pred_lbls))
                         score_micro.append(precision_score(val_labels,eval_pred_lbls,average='micro'))
@@ -463,16 +488,18 @@ def train(sessionNModelFlags, trainerFlags, retrain=False, tl=False, cnn_type=No
                     # if error_percent_val<10:
                     #     plot_utils.plot_confusion_matrix(confusion_mtx,normalize=True,save=True)
                     
-                    time_now = time.clock()
+                    time_now = time.time()
                     val_error_recorder.append(round(error_percent_val,2))
                     val_error_timer.append(round(time_now-time_start,2))
-                    print('time elapse:',time_now-time_start)
                     tf.summary.scalar('test_error',error_percent_val)
                     val_error_rate.append(error_percent_val)
                     if(len(val_error_rate)>=3):
                         if val_error_rate[-1]>val_error_rate[-2] or (abs(val_error_rate[-1]-val_error_rate[-2])<0.05 and abs(val_error_rate[-2]-val_error_rate[-3])<0.05):
                             trainer._params["cc_loss_on"]=True 
                     
+                    if early_stop_flag is True:
+                        if stopper.step(1-error_percent_val*0.01,round(time_now - time_start,3)):
+                            break
                 # SAVE MODEL changed by fln
                 model_name = "model-"+str(model_step)+"-"+timestr()
                 if (model_step) == sessionNModelFlags["max_iters"]:
@@ -492,15 +519,19 @@ def train(sessionNModelFlags, trainerFlags, retrain=False, tl=False, cnn_type=No
                             # compute old:now label dict
                             old_now_label_dict = {}
                             for old_label_ in new_devices_list:
-                                tmp = old_new_label_dict_[str(old_label_)]
-                                now_ = new_rearange_label_dict_[str(tmp) + '.0']
-                                old_now_label_dict[old_label_] = now_
+                                if str(old_label_) in old_new_label_dict_.keys():
+                                    tmp = old_new_label_dict_[str(old_label_)]
+                                    if str(tmp) + '.0' in new_rearange_label_dict_.keys():
+                                        now_ = new_rearange_label_dict_[str(tmp) + '.0']
+                                        if old_label_ in old_now_label_dict.keys():
+                                            old_now_label_dict[old_label_] = now_
                             # compute accuracy of devices in new_devices_list
                             
                             for old_label_ in new_devices_list:
-                                now_label_ = old_now_label_dict[old_label_]
-                                accuracy_c_ = round(cm_final[now_label_,now_label_]/np.sum(cm_final[now_label_])*100,2)
-                                new_devices_accuracy[old_label_] = accuracy_c_
+                                if old_label_ in old_now_label_dict.keys():
+                                    now_label_ = old_now_label_dict[old_label_]
+                                    accuracy_c_ = round(cm_final[now_label_,now_label_]/np.sum(cm_final[now_label_])*100,2)
+                                    new_devices_accuracy[old_label_] = accuracy_c_
 
                         else:
                             save_model_dir = sessionNModelFlags['logdir']['trainTf'] + '/' + new_devices_model_save_postfix
@@ -527,59 +558,43 @@ def train(sessionNModelFlags, trainerFlags, retrain=False, tl=False, cnn_type=No
     # print(val_samples)
     # print(val_labels)
 
-    with open(trainerFlags['out_path']+'val_error_rate.txt','a') as f:
-        f.write("===================================================================\n")
-        f.write('multi label model = '+str(trainerFlags['use_multi_task_model'])+'\n')
-        f.write('lbl percent = '+str(sessionNModelFlags['percent_lbl_samples'])+'\n')
-        f.write('threshold = '+str(sessionNModelFlags['threshold'])+'\n')
-        f.write('cc_loss_on ='+str(trainerFlags['cc_loss_on'])+'\n')
-        f.write('dynamic_loss_weight ='+str(trainerFlags['dynamic_loss_weight'])+'\n')
-        
-        if sessionNModelFlags['new_devices_list'] is not None:
-            new_devices_str = ','.join(str(item) for item in sessionNModelFlags['new_devices_list'])
-            f.write('new_devices_list = {}\n'.format(new_devices_str))
-        f.write('retrain = ' + str(sessionNModelFlags['retrain']) + '\n')
-        f.write('transfer_learing = ' + str(tl) + '\n')
-        f.write('use_cnn_layer_for_cluster:{}\n'.format(str(sessionNModelFlags['use_cnn_layer_for_cluster'])))
-        f.write('cnn_type:{}\n'.format(cnn_type))
-        for i in range(len(val_error_rate)):
-            f.write(str(round(val_error_rate[i],10)))
-            if i!=len(val_error_rate)-1:
-                f.write(',')
-        f.write('\n')
-        #-----write score--------------------------------------------------------------------
-        f.write("-------------score----------------------------------------------------------------\n")
-        if score_micro_flag == False:
-            metric_aver_list = ["macro","micro","weighted"]
-            metric_str_list = ["accuracy_score", "precision_score","f1_score","recall_score"]
-            metric_list = [accuracy_score, precision_score,f1_score,recall_score]
-            for metric_str in metric_str_list:
-                if metric_str == "accuracy_score":
-                    f.write("accuracy_score = {}\n".format(score["accuracy_score"]))
-                else:
-                    for metric_aver in metric_aver_list:
-                        f.write(metric_str + "({}) = {}\n".format(metric_aver, score[metric_str][metric_aver]))
-        else:
-            f.write("accuracy_score = {}\n".format(score_micro[0]))
-            f.write("precision_score = {}\n".format(score_micro[1]))
-            f.write("recall_score = {}\n".format(score_micro[2]))
-            f.write("f1_score = {}\n".format(score_micro[3]))
-        f.write("----------------------------------------------------------------------------------\n")
-        f.write("------------------------new devices accuracy---------------------------------------\n")
-        for key,value in new_devices_accuracy.items():
-            print('new_device:{},accuracy:{}'.format(key,value))
-            f.write('new_device:{},accuracy:{}\n'.format(key,value))
-        #----------------------cm---------------------------------------------------------------------
-        f.write("--------------------------------cm------------------------------------------------\n")
-        f.write(get_cm_str(cm_final)+'\n')
-        f.write("--------------------------------------------------------------------------------\n")
-        f.write("test_error_recorder:\n")
-        f.write(','.join(str(item) for item in val_error_recorder)+'\n')
-        f.write("test_error_timer:\n")
-        f.write(','.join(str(item) for item in val_error_timer)+'\n')
-        f.write("--------------------------------------------------------------------------------\n")
-        f.close()
+    logger.info(f'val error rate:{val_error_rate}')
+    #-----write score--------------------------------------------------------------------
+    logger.info("-------------score----------------------------------------------------------------")
+    if score_micro_flag == False:
+        metric_aver_list = ["macro","micro","weighted"]
+        metric_str_list = ["accuracy_score", "precision_score","f1_score","recall_score"]
+        metric_list = [accuracy_score, precision_score,f1_score,recall_score]
+        for metric_str in metric_str_list:
+            if metric_str == "accuracy_score":
+                logger.info("accuracy_score = {}".format(score["accuracy_score"]))
+            else:
+                for metric_aver in metric_aver_list:
+                    logger.info(metric_str + "({}) = {}".format(metric_aver, score[metric_str][metric_aver]))
+    else:
+        logger.info("accuracy_score = {}".format(score_micro[0]))
+        logger.info("precision_score = {}".format(score_micro[1]))
+        logger.info("recall_score = {}".format(score_micro[2]))
+        logger.info("f1_score = {}".format(score_micro[3]))
+    logger.info("------------------------new devices accuracy---------------------------------------")
+    for key,value in new_devices_accuracy.items():
+        print('new_device:{},accuracy:{}'.format(key,value))
+        logger.info('new_device:{},accuracy:{}'.format(key,value))
+    #----------------------cm---------------------------------------------------------------------
+    logger.info("--------------------------------cm------------------------------------------------")
+    logger.info('\n' + get_cm_str(cm_final))
+    logger.info("--------------------------------------------------------------------------------")
+    logger.info("test_error_recorder:")
+    logger.info(','.join(str(item) for item in val_error_recorder))
+    logger.info("test_error_timer:")
+    logger.info(','.join(str(item) for item in val_error_timer))
+    logger.info("--------------------------------------------------------------------------------\n")
 
+    # early stopper
+    if early_stop_flag is True:
+        logger.info('***** early stopping')
+        logger.info(f'best acc:{stopper.best_score}')
+        logger.info(f'time of best acc:{stopper.best_time}')
 
                 
                

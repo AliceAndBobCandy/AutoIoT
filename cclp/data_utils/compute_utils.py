@@ -25,7 +25,7 @@ font={
     'family':'Arial',
     'weight':'medium',
       'size':13
-}
+    }
 
 # device_list = [
 #     "Amazon Echo [0]","Belkin wemo motion sensor [1]","Belkin Wemo switch [2]",
@@ -49,6 +49,15 @@ device_list = [
     "Withings Smart Baby Monitor","Withings Smart scale","Withings Baby Monitor",
     "Non-IoT Device"
 ]
+# device_list = ['Google OnHub', 'Samsung SmartThings Hub', 'Philips HUE Hub', 'Insteon Hub', 'Sonos', 
+# 'Securifi Almond', 'Nest Camera', 'Belkin WeMo Motion Sensor', 'LIFX Virtual Bulb', 'Belkin WeMo Switch', 
+# 'Amazon Echo', 'Belkin Netcam', 'Ring Doorbell', 'Roku TV', 'Roku 4', 'Amazon Fire TV', 'nVidia Shield', 
+# 'Apple TV (4th Gen)', 'Belkin WeMo Link', 'Netgear Arlo Camera', 'D-Link DCS-5009L Camera', 
+# 'Logitech Logi Circle', 'Canary', 'Piper NV [23]', 'Withings Home', 'WeMo Crockpot', 'MiCasaVerde VeraLite',
+# 'Chinese Webcam', 'August Doorbell Cam', 'TP-Link WiFi Plug', 'Chamberlain myQ Garage Opener', 
+# 'Logitech Harmony Hub', 'Caseta Wireless Hub', 'Google Home Mini', 'Google Home', 'Bose SoundTouch 10', 
+# 'Harmon Kardon Invoke', 'Apple HomePod', 'Roomba', 'Samsung SmartTV', 'Koogeek Lightbulb', 
+# 'TP-Link Smart WiFi LED Bulb', 'Wink 2 Hub', 'Nest Cam IQ', 'Nest Guard', 'Non-IoT devices']
 
 
 cMap = ['red', 'coral', 'cornflowerblue', 'deepskyblue']
@@ -66,6 +75,11 @@ def eval_probability_distribution(logits):
 
 # observe prob_distri of devices, especially the new devices.
 def observe_prob_distri(prob_distri, labels, new_devices_list, path,old_new_label_dict):
+    font1 = {
+        'family':'Arial',
+        'weight':'medium',
+        'size':20
+    }
     if not os.path.exists(path):
         os.makedirs(path)
     # observe new_devices
@@ -91,23 +105,24 @@ def observe_prob_distri(prob_distri, labels, new_devices_list, path,old_new_labe
         #
         plt.rcParams.update(plt.rcParamsDefault)
         plt.figure(figsize=(5.2,4.5),dpi=300)        
-        plt.tick_params(labelsize=11)
+        plt.tick_params(labelsize=16)
         ax = plt.gca()       
         plt.xlim(0,1.1)       
         plt.bar(max_count.keys(),max_count.values(),width = 0.01)
         # plt.title(device_name,fontdict=font)
-        plt.xlabel('Max probability',fontdict=font)
-        plt.ylabel('Count',fontdict=font)
-        # 坐标轴刻度字体加粗
-        for i in range(len(ax.get_xticklabels())):
-            ax.get_xticklabels()[i].set_fontweight("bold")
-        for i in range(len(ax.get_yticklabels())):
-            ax.get_yticklabels()[i].set_fontweight("bold")
+        plt.xlabel('Max probability',fontdict=font1)
+        plt.ylabel('Count',fontdict=font1)
+        # # 坐标轴刻度字体加粗
+        # for i in range(len(ax.get_xticklabels())):
+        #     ax.get_xticklabels()[i].set_fontweight("bold")
+        # for i in range(len(ax.get_yticklabels())):
+        #     ax.get_yticklabels()[i].set_fontweight("bold")
             # ax.get_yticklabels()[i].set_fontweight("bold")
         # fontproperties = {'family':'Arial','size': 6} 
         # ax.set_xticks(np.arange(0,1,0.1))
         # ax.set_xticklabels(ax.get_xticks(), fontproperties) 
         # ax.set_yticklabels(ax.get_yticks(), fontproperties) 
+        plt.tight_layout()
         plt.savefig(path + '/{}.png'.format(device_name))
         
         plt.close()
@@ -125,20 +140,23 @@ def observe_prob_distri(prob_distri, labels, new_devices_list, path,old_new_labe
         # ax.set_xticks([0,1,0.1])
         plt.figure(figsize=(5.2,4.5),dpi=300)
         ax = plt.gca() 
-        plt.tick_params(labelsize=11)
+        plt.tick_params(labelsize=16)
         plt.xlim(0,1.1)
         plt.bar(max_count.keys(),max_count.values(),width = 0.01)
         # plt.title(device_name,fontdict=font)
-        plt.xlabel('Max probability',fontdict=font)
-        plt.ylabel('Count',fontdict=font)
-        for i in range(len(ax.get_xticklabels())):
-            ax.get_xticklabels()[i].set_fontweight("bold")
-        for i in range(len(ax.get_yticklabels())):
-            ax.get_yticklabels()[i].set_fontweight("bold")
-        plt.savefig(path + '/{}.png'.format(device_name))
+        plt.xlabel('Max probability',fontdict=font1)
+        plt.ylabel('Count',fontdict=font1)
+        # for i in range(len(ax.get_xticklabels())):
+        #     ax.get_xticklabels()[i].set_fontweight("bold")
+        # for i in range(len(ax.get_yticklabels())):
+        #     ax.get_yticklabels()[i].set_fontweight("bold")
+        plt.tight_layout()
+        plt.savefig(path + '/{}.pdf'.format(device_name))
+        
         # plt.show()
         print(path)
         plt.close() 
+    return
     # for device_idx,maxs in device_max_dict.items():
     #     max_dict = Counter(maxs)    
     # observe old_devices
@@ -245,7 +263,7 @@ def get_optimal_k_from_slope(slopes,cnn_type=None,use_cnn_layer_for_cluster=Fals
     print('use_cnn_layer_for_cluster',use_cnn_layer_for_cluster)
     if use_cnn_layer_for_cluster is False:
         # threshold = -100
-        threshold = -109.34
+        threshold = -115.9
     else:
         threshold = -300
     # print('threshold',threshold)
@@ -330,6 +348,11 @@ def rf_cv(epsilon, minimum_samples):
 data_bo = None
 # return relabeled data
 def relabel_data(data_X,K,path,new_labels,data,type=1,cnn_type=None,merge_cnn_layer_method=' ',use_cnn_layer_for_cluster=False,logger=None):
+    font1={
+    'family':'Arial',
+    'weight':'medium',
+      'size':18
+    }
     if type == 1: # elbow + kmeans
         SSE = []  # 存放每次结果的误差平方和
         Scores = []
@@ -346,16 +369,17 @@ def relabel_data(data_X,K,path,new_labels,data,type=1,cnn_type=None,merge_cnn_la
         X = range(1,K)
         path_ = path.split('sse')[0] + '/'
         plt.figure(figsize=(5,4),dpi=300)
-        plt.tick_params(labelsize=9)
-        plt.xlabel('Number of cluser: k',fontdict=font)
-        plt.ylabel('Minimal square error',fontdict=font)
+        plt.tick_params(labelsize=14)
+        plt.xlabel('Number of clusters: k',fontdict=font1)
+        plt.ylabel('Minimal square error',fontdict=font1)
         plt.plot(X,SSE,label='SSE',markersize=5,marker='o')
         
         plt.grid(ls='--')
         # plt.ylabel('silhouette_score')
         # plt.plot(X,Scores,'o-')
-        # plt.vlines(2,0,3000,colors='black',linestyles='dashed') # changed
-        plt.savefig(path_ + 'elbow_{}_{}.png'.format(cnn_type,merge_cnn_layer_method))
+        plt.vlines(2,0,400,colors='black',linestyles='dashed') # changed
+        plt.tight_layout()
+        plt.savefig(path_ + 'elbow_{}_{}.pdf'.format(cnn_type,merge_cnn_layer_method))
         # plt.show()
 
         # find optimal k
@@ -389,6 +413,7 @@ def relabel_data(data_X,K,path,new_labels,data,type=1,cnn_type=None,merge_cnn_la
         # find label map relationship of new_labels and kmeans labels
         if optimal_k == len(pred_labels_set):
             pred_new_label_dict = {} # store pred_label: new labels dict, it is the final res
+            new_pred_label_dict = {}
             used_new_label = [] 
             new_label_to_attribute = []
             new_label_in_pred_label_ratio = {}
@@ -417,7 +442,11 @@ def relabel_data(data_X,K,path,new_labels,data,type=1,cnn_type=None,merge_cnn_la
                     new_label_ = list(items_.keys())[0]
                     used_new_label.append(new_label_)
                     pred_new_label_dict[pred_label].append(new_label_)
-                    pred_labels[pred_labels==pred_label] = new_label_
+                    assert new_label_ not in new_pred_label_dict.keys(),f"new label {new_label_} has been distributed to other cluster before"
+                    new_pred_label_dict[new_label_] = pred_label
+                    
+                        
+                    # pred_labels[pred_labels==pred_label] = new_label_
                     if new_label_ in new_label_to_attribute:
                         new_label_to_attribute.remove(new_label_)
                 else: # find max ratio new_label_
@@ -427,38 +456,53 @@ def relabel_data(data_X,K,path,new_labels,data,type=1,cnn_type=None,merge_cnn_la
                     used_new_label.append(keys_[0])
                     new_label_to_attribute += keys_[1:]
                     pred_new_label_dict[pred_label].append(keys_[0])
-                    pred_labels[pred_labels==pred_label] = keys_[0]
+                    assert keys_[0] not in new_pred_label_dict.keys(),f"new label {keys_[0]} has been distributed to other cluster before"
+                    new_pred_label_dict[keys_[0]] = pred_label
+                        
+                    # pred_labels[pred_labels==pred_label] = keys_[0]
                     if keys_[0] in new_label_to_attribute:
                         new_label_to_attribute.remove(keys_[0])
-
-                    
+                
             # dispose left new labels
             for new_label_ in new_label_to_attribute:
                 items_ = new_label_in_pred_label_ratio[new_label_]
                 items_ = sorted(items_.items(),key=lambda x:x[1],reverse=True)
                 key = items_[0][0]
                 pred_new_label_dict[key].append(new_label_)
+                assert new_label_ not in new_pred_label_dict.keys(),f"new label {keys_[0]} has been distributed to other cluster before"
+                new_pred_label_dict[new_label_] = key
+                    
             logger.info(f'pred_label_new_label_dict:{pred_new_label_dict}')
-
 
                 # corres_label = max(list(new_label_corres),key=list(new_label_corres).count)
                 # pred_new_label_dict[pred_label] = corres_label
                 # pred_labels[pred_labels==pred_label]=corres_label
 
-
             print('============= cnn type:{}==============='.format(cnn_type))
             # compute the label prediction accracy, ==========================!!!!!!!!!!!!!!!
+            # for true_label in np.unique(new_labels):
+            #     true_label_indices = new_labels==true_label
+            #     true_num_c = np.sum(true_label_indices)
+            #     print('true_label:{},num:{}'.format(true_label,np.sum(true_label_indices)))
+            #     true_pred_label_indices = true_label_indices & (pred_labels == true_label)
+            #     true_pred_num_c = np.sum(true_pred_label_indices)
+            #     print('true_pred_label:{},num:{},ratio:{}'.format(true_label,np.sum(true_pred_num_c),true_pred_num_c*1.0/true_num_c))
+
+            # construct new pred labels
+            new_pred_labels = pred_labels
             for true_label in np.unique(new_labels):
-                true_label_indices = new_labels==true_label
-                true_num_c = np.sum(true_label_indices)
-                print('true_label:{},num:{}'.format(true_label,np.sum(true_label_indices)))
-                true_pred_label_indices = true_label_indices & (pred_labels == true_label)
-                true_pred_num_c = np.sum(true_pred_label_indices)
-                print('true_pred_label:{},num:{},ratio:{}'.format(true_label,np.sum(true_pred_num_c),true_pred_num_c*1.0/true_num_c))
+                pred_ = new_pred_label_dict[true_label]
+                marked_label = pred_new_label_dict[pred_][0]
+                true_label_bool = (new_labels == true_label)
+                pred_labels[true_label_bool] = marked_label
+
+
+            # for pred_label,new_label in pred_new_label_dict.items():                    
+            #     new_pred_labels[new_pred_labels==pred_label] = new_label[0]
 
 
             # concat new label and data_X, then save the data
-            labels_ = pred_labels.reshape([-1,1])
+            labels_ = new_pred_labels.reshape([-1,1])
             data_r = np.concatenate([labels_,data],axis=1)
             print("optimal_k is {}".format(optimal_k))
             return optimal_k, pd.DataFrame(data_r)
@@ -600,9 +644,10 @@ def get_new_type_num_from_cluster(data1,type,path=None,filtered_cnn_emb=None,mer
                 data_o = data1[label]
                 # data = data[:instance_num]
             else:
-                data1_c = data1[label]
-                # data1_c = data1_c[:instance_num]
-                data_o = np.concatenate([data_o,data1_c],axis=0)
+                if len(data1[label]) > 0:
+                    data1_c = data1[label]
+                    # data1_c = data1_c[:instance_num]
+                    data_o = np.concatenate([data_o,data1_c],axis=0)
             new_labels += [label]*len(data1[label])
             # new_labels += [label]*instance_num
     K = 11
@@ -649,8 +694,15 @@ def get_delta_s(seq):
 #         print(result)
 #     return result
 def rearrange_labels(old_data_train,new_data_train,old_data_test,new_data_test,path):
+
+        # 
+        new_data_train_labels = np.unique(new_data_train['label'])
+        print(f'new data train labels num:{len(new_data_train_labels)}')
+        old_data_train_labels = np.unique(old_data_train['label'])
+        print(f'old data train labels num:{len(old_data_train_labels)}')
+
         new_rearange_label_dict = {}   
-        new_labels = np.unique(new_data_test['label'])
+        new_labels = np.unique(new_data_train['label']) # fmodify
         old_labels = np.unique(old_data_train['label'])
         label_non_iot_cur = np.max(old_labels)
         label_non_iot_new = len(new_labels) + np.max(old_labels)
@@ -669,8 +721,8 @@ def rearrange_labels(old_data_train,new_data_train,old_data_test,new_data_test,p
         with open(path + '/new_rearange_label_dict.json','w') as f:
             json.dump(new_rearange_label_dict,f)
             f.close()
-        return data_train, data_test
 
+        return data_train, data_test
 
 
 # compute KS test result for 2 instances and compare with D table, cur_value is the tested instances, known_values is used to compare.
@@ -711,17 +763,22 @@ def compute_KS(cur_values,known_values,type = 0.05):
 
 # cMap = ['red', 'coral', 'gold', 'c']
 def plot_cdf(known_probs,max_prob_label_dict,new_old_label_dict,path):
+    font1={
+    'family':'Arial',
+    'weight':'medium',
+      'size':16
+    }
     label_set = [-1000,-1,0]
 
     plt.rcParams.update(plt.rcParamsDefault)
-    plt.figure(figsize=(5,4.3),dpi=300)
-    plt.tick_params(labelsize=10)
+    plt.figure(figsize=(4.5,4.5),dpi=300)
+    plt.tick_params(labelsize=14)
     plt.xlim(0,1.1)
-    plt.ylim(0,1.4)
+    plt.ylim(0,1.1)
     ecdf_known = ECDF(known_probs)
     plt.plot(ecdf_known.x,ecdf_known.y,'--',linewidth=1.5,color='orange',label='Known types of devices',alpha=0.8)
-    plt.xlabel('Max probability value',fontdict=font)
-    plt.ylabel('Probability',fontdict=font)
+    plt.xlabel('Max probability value',fontdict=font1)
+    plt.ylabel('Probability',fontdict=font1)
     # plt.savefig(path + '/{}.jpg'.format(device_name))
     # plt.show()
     for idx,label in enumerate(label_set):
@@ -740,7 +797,9 @@ def plot_cdf(known_probs,max_prob_label_dict,new_old_label_dict,path):
             ecdf_x.insert(0,added_value)
             ecdf_y.insert(0,0)
         plt.plot(ecdf_x,ecdf_y,linewidth=1.5,color=cMap[idx],label=device_list[new_old_label_dict[label]],alpha=0.8)
-    plt.legend(fontsize=9, loc=2, frameon=True) #prop={'size':6},
+    # plt.legend(bbox_to_anchor=(1.01,1.2), borderaxespad=0, fontsize=12,ncol=2) #prop={'size':6},
+    plt.legend(bbox_to_anchor=(1,1.02), borderaxespad=0,loc='lower right',fontsize=12) 
+    plt.tight_layout()
     plt.savefig(path)
 
 

@@ -26,6 +26,7 @@ from cclp.frontend.logging.loggers import setup_loggers
 from cclp.frontend.config_flags import TrainSessionNModelFlags, TrainerFlags
 from cclp.routines import train
 from cclp.routines.test_new_devices_multi_instance import New_devices # ks test查找新设备
+from configs.iot.cfg_iot import out_path
 # from cclp.routines.test import New_devices # 使用discriminator思路找到新设备。
 os.environ['KMP_WARNINGS'] = 'off'
 
@@ -142,7 +143,7 @@ if __name__ == '__main__':
     create_session_folders( cfg['out_path'] )
     
     # Setup logger
-    setup_loggers( cmd_loglevel=args.cmd_loglevel, logfile=os.path.join( cfg['out_path'], "logs") )
+    setup_loggers( cmd_loglevel=args.cmd_loglevel, logfile=os.path.join( out_path, "logs") )
     log = logging.getLogger('main') # created in loggers.py.
     log.info("\n======================== Starting new session ==========================\n")
     
@@ -165,14 +166,18 @@ if __name__ == '__main__':
             log.info("================ PRINTING CONFIGURATION ====================")
             sessionNModelFlags.print_params() #put session, model parameters into sessionNModelFlags class
             trainerFlags.print_params() # put training parameters into trainerFlags class
+            
             train.train( sessionNModelFlags=sessionNModelFlags, trainerFlags=trainerFlags ) # core
         # ==========================this part is added by Linna Fan====================================
-        elif cfg['session_type'] == 'test': # test new device          
+        elif cfg['session_type'] == 'test': # test new device    
+            from cclp.data_utils.log_utils import init_log
+            logger = init_log(out_path + 'mylogs/test_new_devices_multi_instance.log','a','new_device_test')  
             sessionNModelFlags = TrainSessionNModelFlags(cfg) # parameters about session model
             sessionNModelFlags['retrain'] = True
             trainerFlags = TrainerFlags(cfg) # parameters about trainer
             log.info("================start testing new device finding==================")
-            new_devices = New_devices(sessionNModelFlags, trainerFlags)
+            new_devices = New_devices(sessionNModelFlags, trainerFlags,logger) # we use
+            # new_devices = New_devices(sessionNModelFlags, trainerFlags)
 
             # new_devices.test_new_devices()
             # discriminator cannot be used 

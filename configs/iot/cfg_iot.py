@@ -12,7 +12,7 @@ session_type = 'test' # can be train/test
 # === Variables that are read from the cmd line too. ===
 # WARN: Values given in cmd line overwrite these given below.
 out_path = pardir + '/output/iot/'
-device = -1 # GPU device number,-1 is to use CPU
+device = 0 # GPU device number,-1 is to use CPU
 model_to_load = None # To start from pretrained model/continue training.
 plot_save_emb = 0 # Plot embedding if emb_size is 2D. 0: No. 1: save. 2: plot. 3: save & plot.
 
@@ -71,15 +71,23 @@ max_iters = 2000 # Max training iterations
 val_during_train = True # Whether to validate performance every now and then.
 val_interval = 200 # Every how many training steps to validate performance.
 # Learning rate schedule
+# train
 lr_sched_type = 'expon_decay' # 'expon_decay' or 'piecewise'
 lr_expon_init = 1e-3 # Only for expon. Initial LR.
 lr_expon_decay_factor = 0.333  # Only for expon. How much to decrease.
 lr_expon_decay_steps = 2000  # Only for expon. How often to decrease.
+
+# # retrain
+# lr_sched_type = 'expon_decay' # 'expon_decay' or 'piecewise'
+# lr_expon_init = 1e-3 # Only for expon. Initial LR.
+# lr_expon_decay_factor = 0.6  # Only for expon. How much to decrease.
+# lr_expon_decay_steps = 400  # Only for expon. How often to decrease.
+
 lr_piecewise_boundaries = None # Only for expon. When to change LR.
 lr_piecewise_values = None # Only for expon. Initial and following values.
 
 # --- Compact Clustering via Label Propagation (CCLP) ---
-cc_weight = 5 # Weight w in: Ltotal = Lsup + w*Lcclp . Set to 0 to disable CCLP.
+cc_weight = 3 # Weight w in: Ltotal = Lsup + w*Lcclp . Set to 0 to disable CCLP.
 cc_steps = 3 # Length of longest chain to optimize. Set to 0 to disable CCLP.
 # cc_loss_on = (cc_steps > 0) or (cc_weight > 0) # Set to False to disable.
 cc_loss_on = True
@@ -95,7 +103,7 @@ cc_sum_over_chains = True # If False, only the longest chain is optimized.
 cc_e_smooth = 0.00001
 cc_optim_smooth_mtx = True
 #===========================================find new devices=================================================
-new_devices_list = [0,4,21] # if None, use all data, else the training set should exclude this list
+new_devices_list = [0,1] # if None, use all data, else the training set should exclude this list
 # new_devices_list = None
 if dataset_name == 'tmc':
     niot_label = 24

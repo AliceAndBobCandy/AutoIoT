@@ -17,6 +17,7 @@ from sklearn.utils import resample
 from cclp.frontend.logging.utils import datetime_str as timestr
 import json
 import os
+from configs.iot.cfg_iot import out_path
 
 threshold = 0.8 # the threshold split the data into new_devices_flag = 0(old data), 1(confidence score<threshold), 2(confidence_score>threshold)
 EPOCHS = 30
@@ -28,7 +29,7 @@ class New_devices(object):
         self.pathToDataFolder = local_dirs_to_data.iot
         self.new_devices_list = sessionNModelFlags['new_devices_list']
         self.new_devices_postfix = '_'.join(str(item) for item in self.new_devices_list)
-        self.main_model_path = 'D:/IoT/IoT_detection/code/fln/semi_supervised_4/ssl_compact_clustering-master2/ssl_compact_clustering-master/output/iot/trainTf/'
+        self.main_model_path = out_path + 'trainTf/'
         self.discriminator_model_path = 'D:/IoT/IoT_detection/code/fln/semi_supervised_4/ssl_compact_clustering-master2/ssl_compact_clustering-master/output/iot/discriminator_model/'
         self.val_data = self.generate_val_data()
         self.val_samples = self.val_data[:,1:]
