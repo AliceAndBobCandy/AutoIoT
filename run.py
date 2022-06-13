@@ -27,15 +27,11 @@ from cclp.frontend.config_flags import TrainSessionNModelFlags, TrainerFlags
 from cclp.routines import train
 from cclp.routines.test_new_devices_multi_instance import New_devices # ks test查找新设备
 from configs.iot.cfg_iot import out_path
-# from cclp.routines.test import New_devices # 使用discriminator思路找到新设备。
 os.environ['KMP_WARNINGS'] = 'off'
 
 def setup_arg_parser() :
-    parser = argparse.ArgumentParser( prog='Compact Clustering via Label Propagation (CCLP)', formatter_class=argparse.RawTextHelpFormatter,
-                                      description=  "This software accompanies the research presented in:\n"+\
-                                                    "Kamnitsas et al, Semi-supervised learning via compact latent space clustering, ICML 2018.\n"+\
-                                                    "We hope our work aids you in your endeavours.\n"+\
-                                                    "For questions and feedback contact: konstantinos.kamnitsas12@ic.ac.uk" )
+    parser = argparse.ArgumentParser( prog='IoT identification', formatter_class=argparse.RawTextHelpFormatter,
+                                      description=  "IoT identification (AutoIoT)")
     # Required
     parser.add_argument(dest='cfg_file', type=str, help="[REQUIRED] Path to config file.")
     # Optional cfg that overrides values given in config file.

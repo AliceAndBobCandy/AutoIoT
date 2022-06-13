@@ -286,112 +286,31 @@ def add_softmax_cross_entr(logits, lbls, weight=1.0, lbl_smoothing=0.0,use_multi
     # ... Those, along with regularization at layers, are all collected with a call tf.losses.get_total_loss().
     
     
-    # if use multi task models, the lbls should be added two dimensions, if label==24, the last two dimension is (0,1), else (1,0)
-    if use_multi_task_model==1:# dispose lbls, add 2 dimensions to it
-        cols = logits.get_shape()[-1]
-        condition = tf.equal(lbls,cols-3) #col-2=26-2=24,condition=1 stands for NoT(lbls==24)
-        tf_ones = tf.ones_like(lbls) #each element of lbls is an scaler
-        tf_zeros = tf.zeros_like(lbls)
-        expand_ = tf.where(condition,tf_ones,tf_zeros)#NoT 1--01
-        onehot_labels = tf.one_hot(lbls, logits.get_shape()[-1]-2) #change scaler to onehot code
-        onehot_expand = tf.one_hot(expand_,2)#Not 01
-        weights = generate_weights(onehot_labels=onehot_labels,num_classes=logits.get_shape()[-1]-2)
-
-        loss_logit_weighted_1 = tf.losses.softmax_cross_entropy(
-                                onehot_labels = onehot_labels,
-                                logits = logits[:,0:cols-2],
-                                scope = 'loss_logit_weighted_1',
-                                weights = weights, # !!!sample weights
-                                label_smoothing = lbl_smoothing)
-        weights2 = generate_weights(onehot_labels=onehot_expand,num_classes=2)
-        # weights2 = 1
-        loss_logit_weighted_2 = tf.losses.softmax_cross_entropy(
-                                onehot_labels = onehot_expand,
-                                logits = logits[:,cols-2:cols],
-                                scope = 'loss_logit_weighted_2',
-                                weights = weights2, # !!!sample weights
-                                label_smoothing = lbl_smoothing)                        
-    elif use_multi_task_model==2:
-        cols = logits.get_shape()[-1]
-        condition = tf.equal(lbls,cols-1) #col-3=27-3=24,condition=1 stands for NoT(lbls==24)
-        tf_ones = tf.ones_like(lbls) #each element of lbls is an scaler
-        tf_zeros = tf.zeros_like(lbls)
-        expand_ = tf.where(condition,tf_ones,tf_zeros) # 1 stands for NoT
-        onehot_labels = tf.one_hot(lbls, logits.get_shape()[-1]) #change scaler to onehot code
-        onehot_expand = tf.one_hot(expand_,2)
-        weights = generate_weights(onehot_labels=onehot_labels,num_classes=logits.get_shape()[-1])
-
-        loss_logit_weighted_1 = tf.losses.softmax_cross_entropy(
-                                onehot_labels = onehot_labels,
-                                logits = logits[:,0:cols],
-                                scope = 'loss_logit_weighted_1',
-                                weights = weights, # 
-                                label_smoothing = lbl_smoothing)
-        weights2 = generate_weights(onehot_labels=onehot_expand,num_classes=2)
-        weight2 = 2
-        loss_logit_weighted_2 = tf.losses.softmax_cross_entropy(
-                                onehot_labels = onehot_expand,
-                                logits = logits2,
-                                scope = 'loss_logit_weighted_2',
-                                weights = 1, # 
-                                label_smoothing = lbl_smoothing)
-    elif use_multi_task_model== 4:
-        cols = logits.get_shape()[-1] # 24
-        condition = tf.equal(lbls,cols) #col-3=27-3=24,condition=1 stands for NoT(lbls==24)
-        tf_ones = tf.ones_like(lbls) #each element of lbls is an scaler
-        tf_zeros = tf.zeros_like(lbls)
-        expand_ = tf.where(condition,tf_ones,tf_zeros) # 1 stands for NoT
-        onehot_labels = tf.one_hot(lbls, logits.get_shape()[-1]) #change scaler to onehot code
-        onehot_expand = tf.one_hot(expand_,2)  #IoT--NoT
-        # weights = generate_weights(onehot_labels=onehot_labels,num_classes=logits.get_shape()[-1])
-        weights = 1
-        loss_logit_weighted_1 = tf.losses.softmax_cross_entropy(
-                                onehot_labels = onehot_labels,
-                                logits = logits[:,0:cols],
-                                scope = 'loss_logit_weighted_1',
-                                weights = weights, # 
-                                label_smoothing = lbl_smoothing)
-        weights2 = generate_weights(onehot_labels=onehot_expand,num_classes=2)
-        weight2 = 1
-        loss_logit_weighted_2 = tf.losses.softmax_cross_entropy(
-                                onehot_labels = onehot_expand,
-                                logits = logits2,
-                                scope = 'loss_logit_weighted_2',
-                                weights = weight2, # 
-                                label_smoothing = lbl_smoothing)       
-    elif use_multi_task_model == 3:
-        cols = logits.get_shape()[-1]
-        condition = tf.equal(lbls,cols-2) #col-2=26-2=24,condition=1 stands for NoT(lbls==24)
-        tf_ones = tf.ones_like(lbls) #each element of lbls is an scaler
-        tf_zeros = tf.zeros_like(lbls)
-        expand_ = tf.where(condition,tf_ones,tf_zeros)# IoT 1
-        onehot_labels = tf.one_hot(lbls, logits.get_shape()[-1]-1) #change scaler to onehot code
-        onehot_expand = tf.one_hot(expand_,1)#Not 01
-        weights = generate_weights(onehot_labels=onehot_labels,num_classes=logits.get_shape()[-1]-1)
-
-        loss_logit_weighted_1 = tf.losses.softmax_cross_entropy(
-                                onehot_labels = onehot_labels,
-                                logits = logits[:,0:cols-1],
-                                scope = 'loss_logit_weighted_1',
-                                weights = weights, # !!!sample weights
-                                label_smoothing = lbl_smoothing)
-        weights2 = generate_weights(onehot_labels=onehot_expand,num_classes=1)
-        # weights2 = 1
-        loss_logit_weighted_2 = tf.losses.softmax_cross_entropy(
-                                onehot_labels = onehot_expand,
-                                logits = logits[:,cols-1:cols],
-                                scope = 'loss_logit_weighted_2',
-                                weights = weights2, # !!!sample weights
-                                label_smoothing = lbl_smoothing)             
-    else:
-        weights = generate_weights(onehot_labels=tf.one_hot(lbls, logits.get_shape()[-1]),num_classes=logits.get_shape()[-1])
-        loss_logit_weighted = tf.losses.softmax_cross_entropy(
-                            onehot_labels = tf.one_hot(lbls, logits.get_shape()[-1]),#!!!the second para is the dimention of onehot
-                            logits = logits,
-                            scope = 'loss_logit_weighted',
-                            weights = weights,
+    
+    cols = logits.get_shape()[-1] # 24
+    condition = tf.equal(lbls,cols) #col-3=27-3=24,condition=1 stands for NoT(lbls==24)
+    tf_ones = tf.ones_like(lbls) #each element of lbls is an scaler
+    tf_zeros = tf.zeros_like(lbls)
+    expand_ = tf.where(condition,tf_ones,tf_zeros) # 1 stands for NoT
+    onehot_labels = tf.one_hot(lbls, logits.get_shape()[-1]) #change scaler to onehot code
+    onehot_expand = tf.one_hot(expand_,2)  #IoT--NoT
+    # weights = generate_weights(onehot_labels=onehot_labels,num_classes=logits.get_shape()[-1])
+    weights = 1
+    loss_logit_weighted_1 = tf.losses.softmax_cross_entropy(
+                            onehot_labels = onehot_labels,
+                            logits = logits[:,0:cols],
+                            scope = 'loss_logit_weighted_1',
+                            weights = weights, # 
                             label_smoothing = lbl_smoothing)
-    # tf.summary.scalar('Loss_Logit_weighted', loss_logit_weighted)
+    weights2 = generate_weights(onehot_labels=onehot_expand,num_classes=2)
+    weight2 = 1
+    loss_logit_weighted_2 = tf.losses.softmax_cross_entropy(
+                            onehot_labels = onehot_expand,
+                            logits = logits2,
+                            scope = 'loss_logit_weighted_2',
+                            weights = weight2, # 
+                            label_smoothing = lbl_smoothing)       
+    
     
     
     

@@ -46,19 +46,14 @@ class Trainer(object):
             cclp_weight = self._params["cc_weight"]
 
         #supervised loss
-        if self._params['use_multi_task_model']==2 or self._params['use_multi_task_model']==4:
-            losses.add_softmax_cross_entr(logits = net_model.tensor_families["train_sup"]["logits_tens"],
-                                       logits2 = net_model.tensor_families["train_sup"]["logits_tens_2"],
-                                       lbls = t_sup_labels,
-                                    #    weight = self._params["logit_weight"],
-                                       weight = weight1,
-                                       use_multi_task_model=self._params['use_multi_task_model'] )
-        else:
-            losses.add_softmax_cross_entr(logits = net_model.tensor_families["train_sup"]["logits_tens"],
-                                       lbls = t_sup_labels,
-                                    #    weight = self._params["logit_weight"],
-                                       weight = weight1,
-                                       use_multi_task_model=self._params['use_multi_task_model'] )
+        
+        losses.add_softmax_cross_entr(logits = net_model.tensor_families["train_sup"]["logits_tens"],
+                                    logits2 = net_model.tensor_families["train_sup"]["logits_tens_2"],
+                                    lbls = t_sup_labels,
+                                #    weight = self._params["logit_weight"],
+                                    weight = weight1,
+                                    use_multi_task_model=self._params['use_multi_task_model'] )
+        
         
         if self._params["cc_loss_on"]:
             cclp_loss = losses.add_cclp_loss( # execute label propogation and compute loss of T and H

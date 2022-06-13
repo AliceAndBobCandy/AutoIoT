@@ -367,13 +367,7 @@ def iot_cnn2( inputs,
 def get_feat_extractor_z_func( feat_extractor_z ):
     # Returns: Pointer to the function for the architecture of feature extractor Z.
     arch_func = None
-    if feat_extractor_z == "mnist_cnn":
-        arch_func = mnist_cnn
-    elif feat_extractor_z == "svhn_cnn":
-        arch_func = svhn_cnn
-    elif feat_extractor_z == "cifar_cnn":
-        arch_func = cifar_cnn
-    elif feat_extractor_z == 'iot_fc':
+    if feat_extractor_z == 'iot_fc':
         arch_func = iot_fc
     elif feat_extractor_z == 'iot_cnn':
         arch_func = iot_cnn

@@ -63,59 +63,7 @@ def get_cm_str(cm):
         result += tmp_
     result += "]"
     return result
-def get_lbls_of_multi_task_model(data,num_classes=25,threshold=0.7):
-    final_lbls = []
-    rows = data.shape[0]
-    cols = data.shape[1]
-    for item in data:
-        last = item[cols-1] #not
-        last_sub_1 = item[cols-2] #iot
-        M = max(last,last_sub_1)
-        last = last-M # prevent overflow of softmax, last==1 stands for NoT
-        last_sub_1 = last_sub_1-M 
-        prob_IoT = math.exp(last_sub_1)*1.0/(math.exp(last_sub_1)+math.exp(last)) # softmax computation
-        if prob_IoT>=threshold:
-            lbl_ = item[0:num_classes].argmax(-1) 
-            final_lbls.append(lbl_)
-        else:
-            final_lbls.append(num_classes-1)
-    return final_lbls
 
-def get_lbls_of_multi_task_model3(data,num_classes=25,threshold=0.7):
-    final_lbls = []
-    rows = data.shape[0]
-    cols = data.shape[1]
-    for item in data:
-        last = item[cols-1] #iot
-        last_sub_1 = item[cols-2] #not
-        M = max(last,last_sub_1)
-        last = last-M # prevent overflow of softmax, last==1 stands for NoT
-        last_sub_1 = last_sub_1-M 
-        prob_IoT = math.exp(last)*1.0/(math.exp(last_sub_1)+math.exp(last)) # softmax computation
-        if prob_IoT>=threshold:
-            lbl_ = item[0:num_classes].argmax(-1) 
-            final_lbls.append(lbl_)
-        else:
-            final_lbls.append(num_classes-1)
-    return final_lbls
-
-def get_lbls_of_multi_task_model2(data,data2,num_classes=25,threshold=0.7):#data is logit(25 label), data2 is logit2(IoT/NoT)
-    final_lbls = []
-    rows = data.shape[0]
-    cols = data.shape[1]
-    for idx in range(rows):
-        iot_ = data2[idx,0] #iot prob
-        not_ = data2[idx,1] #not prob
-        M = max(iot_,not_)
-        iot_ = iot_-M # prevent overflow of softmax, last==1 stands for NoT
-        not_ = not_-M 
-        prob_IoT = math.exp(iot_)*1.0/(math.exp(iot_)+math.exp(not_)) # softmax computation
-        if prob_IoT>=threshold:
-            lbl_ = data[idx,0:num_classes].argmax(-1) 
-            final_lbls.append(lbl_)
-        else:
-            final_lbls.append(num_classes-1)
-    return final_lbls
 
 def get_lbls_of_multi_task_model4(data,data2,num_classes=25,threshold=0.7):#data is logit(25 label), data2 is logit2(IoT/NoT)
     final_lbls = []
@@ -377,23 +325,11 @@ def train(sessionNModelFlags, trainerFlags, retrain=False, tl=False, cnn_type=No
                 
                 train_pred_lbls_for_metrics = []
                 for i in range(0, len(train_images_for_metrics), sessionNModelFlags["eval_batch_size"]):#fetch a batch for evaluation
-                    if trainerFlags['use_multi_task_model']==1 or trainerFlags['use_multi_task_model']==0 or trainerFlags['use_multi_task_model']==3:
-                        [train_pred_logits_batch] =  sess.run( [ model.tensor_families["eval"]["logits_tens"] ],
-                                                            { model.tensor_families["eval"]["inp_tens"] : train_images_for_metrics[ i : i+sessionNModelFlags["eval_batch_size"] ] } )
-                        # print(train_pred_logits_batch)
-                        if trainerFlags['use_multi_task_model']==1:#added
-                            train_pred_lbls_for_metrics.append(get_lbls_of_multi_task_model(train_pred_logits_batch,num_classes,sessionNModelFlags['threshold'])) # compute last 2 value,if last value exceed a threshold,we assume it is a NoT then its label is 24, else it is determined by argmax() of the 0-24 value
-                        elif trainerFlags['use_multi_task_model']==3:
-                            train_pred_lbls_for_metrics.append(get_lbls_of_multi_task_model3(train_pred_logits_batch,num_classes,sessionNModelFlags['threshold']))
-                        else:
-                            train_pred_lbls_for_metrics.append( train_pred_logits_batch.argmax(-1) ) # !!!Take the classes with argmax.
-                    else: #==2 or 4
-                        [train_pred_logits_batch,train_pred_logits_batch2] =  sess.run( [ model.tensor_families["eval"]["logits_tens"],model.tensor_families["eval"]["logits_tens_2"]],
-                                                            { model.tensor_families["eval"]["inp_tens"] : train_images_for_metrics[ i : i+sessionNModelFlags["eval_batch_size"] ] } )    
-                        if trainerFlags['use_multi_task_model']==2:
-                            train_pred_lbls_for_metrics.append(get_lbls_of_multi_task_model2(train_pred_logits_batch,train_pred_logits_batch2,num_classes,sessionNModelFlags['threshold'])) # compute last 2 value,if last value exceed a threshold,we assume it is a NoT then its label is 24, else it is determined by argmax() of the 0-24 value
-                        else: #==4
-                            train_pred_lbls_for_metrics.append(get_lbls_of_multi_task_model4(train_pred_logits_batch,train_pred_logits_batch2,num_classes,sessionNModelFlags['threshold'])) # compute last 2 value,if last value exceed a threshold,we assume it is a NoT then its label is 24, else it is determined by argmax() of the 0-24 value
+                    
+                    [train_pred_logits_batch,train_pred_logits_batch2] =  sess.run( [ model.tensor_families["eval"]["logits_tens"],model.tensor_families["eval"]["logits_tens_2"]],
+                                                        { model.tensor_families["eval"]["inp_tens"] : train_images_for_metrics[ i : i+sessionNModelFlags["eval_batch_size"] ] } )    
+                    
+                    train_pred_lbls_for_metrics.append(get_lbls_of_multi_task_model4(train_pred_logits_batch,train_pred_logits_batch2,num_classes,sessionNModelFlags['threshold'])) 
                 train_pred_lbls_for_metrics = np.concatenate(train_pred_lbls_for_metrics)
                 if train_pred_lbls_for_metrics.shape[0] > train_gt_lbls_for_metrics.shape[0]: # can happen when superv data = -1. 59230 total data, batcher fills the last batches and the whole thing returns 60000? Not sure.
                     train_pred_lbls_for_metrics = train_pred_lbls_for_metrics[ : train_gt_lbls_for_metrics.shape[0] ]              
@@ -415,27 +351,15 @@ def train(sessionNModelFlags, trainerFlags, retrain=False, tl=False, cnn_type=No
                     eval_pred_lbls = [] # list of embeddings for each val batch: [ [batchSize, 10], .... [bs, 10] ]
                     
                     for i in range(0, len(val_samples), sessionNModelFlags["eval_batch_size"]):
-                        if trainerFlags['use_multi_task_model']==1 or trainerFlags['use_multi_task_model']==0 or trainerFlags['use_multi_task_model']==3:
-                            [eval_pred_logits_batch,
-                            summaries_eval] =  sess.run( [ model.tensor_families["eval"]["logits_tens"], summary_op_eval ],
-                                                        { model.tensor_families["eval"]["inp_tens"] : val_samples[ i : i+sessionNModelFlags["eval_batch_size"] ] } )
-                            if trainerFlags['use_multi_task_model']==1:#added
-                                eval_pred_lbls.append(get_lbls_of_multi_task_model(eval_pred_logits_batch,num_classes)) # compute last 2 value,if last value exceed a threshold,we assume it is a NoT then its label is 24, else it is determined by argmax() of the 0-24 value
-                            else:                       
-                                eval_pred_lbls.append( eval_pred_logits_batch.argmax(-1) ) #!!! Take the classes with argmax.
-                        else:
-                            if trainerFlags['use_multi_task_model']==2:
-                                [eval_pred_logits_batch,eval_pred_logits_batch2,summaries_eval] =  sess.run( [ model.tensor_families["eval"]["logits_tens"],model.tensor_families["eval"]["logits_tens_2"],summary_op_eval],
-                                                                { model.tensor_families["eval"]["inp_tens"] : val_samples[ i : i+sessionNModelFlags["eval_batch_size"] ] } )    
-                                eval_pred_lbls.append(get_lbls_of_multi_task_model2(eval_pred_logits_batch,eval_pred_logits_batch2,num_classes,sessionNModelFlags['threshold'])) # compute last 2 value,if last value exceed a threshold,we assume it is a NoT then its label is 24, else it is determined by argmax() of the 0-24 value
-                            else: # ==4
-                                [eval_pred_logits_batch,eval_pred_logits_batch2,summaries_eval] =  sess.run( [ model.tensor_families["eval"]["logits_tens"],model.tensor_families["eval"]["logits_tens_2"],summary_op_eval],
-                                                                { model.tensor_families["eval"]["inp_tens"] : val_samples[ i : i+sessionNModelFlags["eval_batch_size"] ] } )    
-                                eval_pred_lbls.append(get_lbls_of_multi_task_model4(eval_pred_logits_batch,eval_pred_logits_batch2,num_classes,sessionNModelFlags['threshold'])) # compute last 2 value,if last value exceed a threshold,we assume it is a NoT then its label is 24, else it is determined by argmax() of the 0-24 value
-                                #--------------------------------------------------------------------------------
-                                if plot_tsne_flag == True and model_step == sessionNModelFlags["max_iters"]: #and model_step == sessionNModelFlags["max_iters"]//2:
-                                    eval_emb = sess.run(model.tensor_families["eval"]["emb_z_tens"],{ model.tensor_families["eval"]["inp_tens"] : val_samples[ i : i+sessionNModelFlags["eval_batch_size"] ] })
-                                    eval_emb_all.append(eval_emb)
+                        
+                            
+                        [eval_pred_logits_batch,eval_pred_logits_batch2,summaries_eval] =  sess.run( [ model.tensor_families["eval"]["logits_tens"],model.tensor_families["eval"]["logits_tens_2"],summary_op_eval],
+                                                        { model.tensor_families["eval"]["inp_tens"] : val_samples[ i : i+sessionNModelFlags["eval_batch_size"] ] } )    
+                        eval_pred_lbls.append(get_lbls_of_multi_task_model4(eval_pred_logits_batch,eval_pred_logits_batch2,num_classes,sessionNModelFlags['threshold'])) 
+                        #--------------------------------------------------------------------------------
+                        if plot_tsne_flag == True and model_step == sessionNModelFlags["max_iters"]: #and model_step == sessionNModelFlags["max_iters"]//2:
+                            eval_emb = sess.run(model.tensor_families["eval"]["emb_z_tens"],{ model.tensor_families["eval"]["inp_tens"] : val_samples[ i : i+sessionNModelFlags["eval_batch_size"] ] })
+                            eval_emb_all.append(eval_emb)
                            
 
                     eval_pred_lbls = np.concatenate(eval_pred_lbls) # from list to array.
@@ -549,14 +473,7 @@ def train(sessionNModelFlags, trainerFlags, retrain=False, tl=False, cnn_type=No
                         f.close()
         coordinator.request_stop() # Stop the threads.
         coordinator.join(threads)
-    # output to csv 'val_error_rate.csv'
-    # val_error_rate = pd.DataFrame(val_error_rate)
-    # val_error_rate.to_csv(trainerFlags['out_path']+'val_error_rate.csv',index=False,header=None)
-    # print(eval_emb_all)
-    # eval_emb_all = np.concatenate(eval_emb_all)
-    # plot_tsne(eval_emb_all,val_samples,val_labels) # plot_tsne
-    # print(val_samples)
-    # print(val_labels)
+    
 
     logger.info(f'val error rate:{val_error_rate}')
     #-----write score--------------------------------------------------------------------

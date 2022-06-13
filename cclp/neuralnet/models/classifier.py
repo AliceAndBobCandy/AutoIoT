@@ -97,10 +97,7 @@ class Classifier(object):
             
     def _compute_logits_of_emb_z(self, emb_z, is_training, init_vars=False, seed=None):
         # Adds classification layer.
-        # emb_z: Embedding Z, produced by the feature extractor architecture.
-        
-        #weights_initializer = tf.truncated_normal_initializer(stddev=0.01, seed=seed)
-        #weights_initializer = tf.contrib.layers.xavier_initializer(uniform=True, seed=seed, dtype=tf.float32) # Default of Slim and Tf
+       
         weights_initializer = tf.contrib.layers.variance_scaling_initializer(factor=2.0, mode='FAN_IN', uniform=False, seed=seed, dtype=tf.float32)
         activation_fn = tf.nn.elu
         with tf.variable_scope('compute_logits_name_scope', reuse=(not init_vars)):
@@ -145,12 +142,7 @@ class Classifier(object):
                             weights_regularizer=tf.contrib.layers.l2_regularizer( self._l2_reg_classif ))       
                 return logits_1_2, logits_2_3  
             elif self.use_multi_task_model == 4:
-                # logits_1_1 = tf.contrib.layers.fully_connected(
-                #             emb_z,
-                #             60,
-                #             weights_initializer=weights_initializer,
-                #             activation_fn=activation_fn,
-                #             weights_regularizer=tf.contrib.layers.l2_regularizer( self._l2_reg_classif ))
+               
                 logits_1_2 = tf.contrib.layers.fully_connected(
                             # logits_1_1,
                             emb_z,
@@ -159,18 +151,7 @@ class Classifier(object):
                             activation_fn=None,
                             weights_regularizer=tf.contrib.layers.l2_regularizer( self._l2_reg_classif ))
                 print('name of logits 1_2:{}'.format(logits_1_2.name)) # compute_logits_name_scope/fully_connected/BiasAdd:0
-                # logits_2_1 = tf.contrib.layers.fully_connected(
-                #             emb_z,
-                #             60,
-                #             weights_initializer=weights_initializer,
-                #             activation_fn=activation_fn,
-                #             weights_regularizer=tf.contrib.layers.l2_regularizer( self._l2_reg_classif ))
-                # logits_2_2 = tf.contrib.layers.fully_connected(
-                #             logits_2_1,
-                #             30,
-                #             weights_initializer=weights_initializer,
-                #             activation_fn=activation_fn,
-                #             weights_regularizer=tf.contrib.layers.l2_regularizer( self._l2_reg_classif ))
+               
                 logits_2_3 = tf.contrib.layers.fully_connected(
                             # logits_2_2,
                             emb_z,

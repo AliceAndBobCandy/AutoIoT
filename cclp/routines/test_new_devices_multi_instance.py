@@ -699,12 +699,7 @@ class New_devices(object):
                                         scope = 'loss_logit_weighted_2',
                                         weights = weight2)   
                 loss_total_weighted = tf.losses.get_total_loss(add_regularization_losses=True) 
-                # list_of_trainable_var_collections = []
-                # trainable_vars_main = tf.get_collection( tf.GraphKeys.TRAINABLE_VARIABLES )
-                # list_of_trainable_var_collections.append( trainable_vars_main ) # concatente all trainable vars in a list/collection.
-                # list_of_trainable_vars = [ var for sublist in list_of_trainable_var_collections for var in sublist ]
-                # optimizer_main = tf.train.AdamOptimizer( t_learning_rate, beta1=0.9, beta2=0.999, epsilon=1e-07 )
-                # initialize added vars
+              
 
                 # accuracy (predictions_1,predictions_2)
                 condition = tf.greater(predictions_2[:,0],iot_niot_threshold)

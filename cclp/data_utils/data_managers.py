@@ -150,9 +150,7 @@ class DataManager(object):
             val_indices_of_lbl_samples_class_c = selected_for_val[ indicator_ ]
             val_available_indices_lbl_list_by_class.append(val_indices_of_lbl_samples_class_c)
         
-        # changed by fln
-        # val_num_lbl_samples_per_c = num_val_samples // num_classes if num_lbl_samples != -1 else -1 # -1 will use all data for each class.
-        # val_selected_for_lbl_list_by_class = sample_by_class( val_available_indices_lbl_list_by_class, val_num_lbl_samples_per_c, rng, upsampling=True)
+      
         if retrain == False:
             val_num_lbl_samples_per_c = num_val_samples // num_classes if num_lbl_samples != -1 else -1 # -1 will use all data for each class.
             val_selected_for_lbl_list_by_class = sample_by_class( val_available_indices_lbl_list_by_class, val_num_lbl_samples_per_c, rng, upsampling=True)
@@ -322,18 +320,7 @@ class IotManager(DataManager):
         if retrain == False:
             # store scaler to self._pathToDataFolder + '/quantileTransformer_scaler.pkl
             pickle.dump(self._scaler_ins,open(self._pathToDataFolder+'/quantileTransformer_scaler.pkl','wb'))
-            # store old_devices_data to csv , only original data from (npArrTrainX, npArrTrainY,Y_generated)
-            # new_devices_str = '-'.join(str(item) for item in new_devices_list)
-            # data_x_origin = npArrTrainX[Y_generated==0]
-            # data_y_origin = npArrTrainY[Y_generated==0].reshape([-1,1])
-            # data_old = np.concatenate([data_y_origin,data_x_origin],axis=1)
-            # data_old_pd = pd.DataFrame(data_old)
-            # data_old_pd.to_csv(self._pathToDataFolder+'/old_devices_data_exclude_{}.csv'.format(new_devices_str),index=False,header=list(self._column_names))
-
-        # (npArrTestX, npArrTestY) = self._readNpArrXYFromDisk( pathToTestImages, pathToTestLabels, boolOneHot, dtypeStrX )
-        # self.datasetsDict[TEST_DB] = DataSet(npArrTestX, npArrTestY, reshape=reshape)
-        # LOG.debug("[SHAPE] npArrTestX.shape = "+str(npArrTestX.shape))
-        # LOG.debug("[SHAPE] npArrTestY.shape = "+str(npArrTestY.shape))
+         
     
     # read data and do upsampling
     def _readNpArrXYFromDisk_retrain(self,dtypeStrX):
@@ -462,10 +449,7 @@ class IotManager(DataManager):
             npArrY = makeArrayOneHot(npArrY, kinds, 1) #!!!
         return npArrY
     
-    # Adapted from tensorflow/contrib/learn/python/learn/datasets/mnist.py
-    # def _read32(self, bytestream):
-    #     dt = np.dtype(np.uint32).newbyteorder('>')
-    #     return np.frombuffer(bytestream.read(4), dtype=dt)[0]
+   
       
     def readIotFromDisk(self, filepath):
         """Extract the csv file into a 2D float np array [index, features].
@@ -493,12 +477,7 @@ class IotManager(DataManager):
                 X = raw_data[:,1:]
                 Y_generated = None
             Y = raw_data[:,0]
-            # change Y to 0 or 1 for a small test!!!
-            # for idx,item in enumerate(Y):
-            #     if item!=24:
-            #         Y[idx] = 1 # 1 stands for IoT
-            #     else:
-            #         Y[idx] = 0
+         
             X = X.reshape(X.shape[0],-1)
             
             # Y = Y.reshape(-1,1)
@@ -527,12 +506,7 @@ class IotManager(DataManager):
         for new_device in self._new_devices_list:
             raw_data.drop(raw_data[raw_data['label']==new_device].index, inplace=True)
 
-        # 将niot label>self._niot_label的全替换成self._niot_label
-        # judge_new_all_niot = True
-        # for device_idx in self._new_devices_list:
-        #     if device_idx < self._niot_label:
-        #         judge_new_all_niot = False
-        # if judge_new_all_niot == True: # 将剩下的大于等于niot_label的标签全替换成niot_label
+       
 
         # rearrange labels of old data,replace label bigger than self._niot_label to self._niot_label
         label_max = max(np.unique(raw_data['label']))
@@ -559,12 +533,7 @@ class IotManager(DataManager):
         # compute new niot_label
         self._niot_label = max(np.unique(raw_data['label']))
 
-        # then merge the new_device_data with old data
-        # each_old_category_number = 200 #-----------
-        # merged_device_data = new_devices_data
-        # for label in range(max(raw_data['label'])+1):
-        #     data_ = raw_data[raw_data['label']==label].sample(frac=0.5)
-        #     merged_device_data = pd.concat([merged_device_data, data_],axis = 0)
+       
 
         # save self._old_new_device_idx_dict
         f = open(self._pathToDataFolder + self._new_devices_postfix + '/old_new_device_idx_dict.json','w')
@@ -597,12 +566,7 @@ class IotManager(DataManager):
         for new_device in self._new_devices_list:
             raw_data.drop(raw_data[raw_data['label']==new_device].index, inplace=True)
 
-        # 将niot label>self._niot_label的全替换成self._niot_label
-        # judge_new_all_niot = True
-        # for device_idx in self._new_devices_list:
-        #     if device_idx < self._niot_label:
-        #         judge_new_all_niot = False
-        # if judge_new_all_niot == True: # 将剩下的大于等于niot_label的标签全替换成niot_label
+        
 
         # rearrange labels of old data,replace label bigger than self._niot_label to self._niot_label
         label_max = max(np.unique(raw_data['label']))
@@ -629,12 +593,7 @@ class IotManager(DataManager):
         # compute new niot_label
         self._niot_label = max(np.unique(raw_data['label']))
 
-        # then merge the new_device_data with old data
-        # each_old_category_number = 200 #-----------
-        # merged_device_data = new_devices_data
-        # for label in range(max(raw_data['label'])+1):
-        #     data_ = raw_data[raw_data['label']==label].sample(frac=0.5)
-        #     merged_device_data = pd.concat([merged_device_data, data_],axis = 0)
+       
 
         # save self._old_new_device_idx_dict
         f = open(self._pathToDataFolder + self._new_devices_postfix + '/old_new_device_idx_dict.json','w')

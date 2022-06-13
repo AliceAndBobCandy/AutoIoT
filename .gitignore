@@ -1,6 +1,8 @@
+cclp/routines/test.py
 dispose_check*
 backup
 time_information.txt
+test*
 test_auto*
 data/iot/0_*
 data/iot/1*
@@ -32,4 +34,5 @@ run_batch_sum.py
 .gitignore
 */__pycache__
 tmp.log
-
+run_batch.py
+cclp/routines/test.py

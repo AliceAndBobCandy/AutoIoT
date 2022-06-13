@@ -16,12 +16,7 @@ import numpy as np
 import tensorflow as tf
 
 def get_tf_batch_with_n_samples_per_class(all_imgs_per_class, n_per_class_per_batch, seed=None):
-    # Create batch inputs with specified number of samples per class.
-    # all_imgs_per_class: List of len() = num_classes, each an np array, [num_samples_per_class, x, y ] 
-    # n_per_class_per_batch: Number of samples per class in the output batch.
-    # returns: two tf tensors: a batch of imgs and corresponding labels....
-    #          Each has n_classes * n_per_class_per_batch elements.
-    #          Elements are ordered, so that first are those of class 0, then class 1, etc ...
+   
     n_classes = len(all_imgs_per_class)
     class_labels = np.arange(n_classes)
     batch_imgs = None

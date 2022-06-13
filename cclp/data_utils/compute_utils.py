@@ -39,7 +39,7 @@ font={
 #     "Non-IoT Device [24]"
 # ]
 device_list = [
-    "Amazon Echo","Belkin Wemo motion sensor","Belkin Wemo switch",
+    "Amazon Echo","Belkin Wemo Motion Sensor","Belkin Wemo Switch",
     "Blipcare Blood Pressure meter","Dropcam","HP Printer",
     "iHome","Insteon Camera A","Insteon Camera B",
     "Light Bulbs LiFX Smart Bulb","Nest Dropcam","NEST Protect smoke alarm",
@@ -111,7 +111,7 @@ def observe_prob_distri(prob_distri, labels, new_devices_list, path,old_new_labe
         plt.bar(max_count.keys(),max_count.values(),width = 0.01)
         # plt.title(device_name,fontdict=font)
         plt.xlabel('Max probability',fontdict=font1)
-        plt.ylabel('Count',fontdict=font1)
+        plt.ylabel('Number of instances',fontdict=font1)
         # # 坐标轴刻度字体加粗
         # for i in range(len(ax.get_xticklabels())):
         #     ax.get_xticklabels()[i].set_fontweight("bold")
@@ -123,7 +123,7 @@ def observe_prob_distri(prob_distri, labels, new_devices_list, path,old_new_labe
         # ax.set_xticklabels(ax.get_xticks(), fontproperties) 
         # ax.set_yticklabels(ax.get_yticks(), fontproperties) 
         plt.tight_layout()
-        plt.savefig(path + '/{}.png'.format(device_name))
+        plt.savefig(path + '/{}.pdf'.format(device_name))
         
         plt.close()
     old_devices_list = [int(item) for item in labels if item >=0]
@@ -145,7 +145,7 @@ def observe_prob_distri(prob_distri, labels, new_devices_list, path,old_new_labe
         plt.bar(max_count.keys(),max_count.values(),width = 0.01)
         # plt.title(device_name,fontdict=font)
         plt.xlabel('Max probability',fontdict=font1)
-        plt.ylabel('Count',fontdict=font1)
+        plt.ylabel('Number of instances',fontdict=font1)
         # for i in range(len(ax.get_xticklabels())):
         #     ax.get_xticklabels()[i].set_fontweight("bold")
         # for i in range(len(ax.get_yticklabels())):
@@ -157,9 +157,7 @@ def observe_prob_distri(prob_distri, labels, new_devices_list, path,old_new_labe
         print(path)
         plt.close() 
     return
-    # for device_idx,maxs in device_max_dict.items():
-    #     max_dict = Counter(maxs)    
-    # observe old_devices
+   
 
 # return a numpy list containing flag (0:old,1:new_devices,2:not decided)
 def get_new_devices_flag(pred_logits,labels,threshold):
@@ -474,19 +472,10 @@ def relabel_data(data_X,K,path,new_labels,data,type=1,cnn_type=None,merge_cnn_la
                     
             logger.info(f'pred_label_new_label_dict:{pred_new_label_dict}')
 
-                # corres_label = max(list(new_label_corres),key=list(new_label_corres).count)
-                # pred_new_label_dict[pred_label] = corres_label
-                # pred_labels[pred_labels==pred_label]=corres_label
+                
 
             print('============= cnn type:{}==============='.format(cnn_type))
-            # compute the label prediction accracy, ==========================!!!!!!!!!!!!!!!
-            # for true_label in np.unique(new_labels):
-            #     true_label_indices = new_labels==true_label
-            #     true_num_c = np.sum(true_label_indices)
-            #     print('true_label:{},num:{}'.format(true_label,np.sum(true_label_indices)))
-            #     true_pred_label_indices = true_label_indices & (pred_labels == true_label)
-            #     true_pred_num_c = np.sum(true_pred_label_indices)
-            #     print('true_pred_label:{},num:{},ratio:{}'.format(true_label,np.sum(true_pred_num_c),true_pred_num_c*1.0/true_num_c))
+           
 
             # construct new pred labels
             new_pred_labels = pred_labels
@@ -497,23 +486,14 @@ def relabel_data(data_X,K,path,new_labels,data,type=1,cnn_type=None,merge_cnn_la
                 pred_labels[true_label_bool] = marked_label
 
 
-            # for pred_label,new_label in pred_new_label_dict.items():                    
-            #     new_pred_labels[new_pred_labels==pred_label] = new_label[0]
-
-
-            # concat new label and data_X, then save the data
+           
             labels_ = new_pred_labels.reshape([-1,1])
             data_r = np.concatenate([labels_,data],axis=1)
             print("optimal_k is {}".format(optimal_k))
             return optimal_k, pd.DataFrame(data_r)
         else:
             return optimal_k, None
-    # elif type == 1.1: # elbow contained in yellowbrick
-    #     model = KMeans()
-    #     visualizer = KElbowVisualizer(model,k=(1,K+1))
-    #     visualizer.fit(data_X,timings=False)
-    #     visualizer.show()
-
+    
     elif type == 2: # BIC + kmeans
         BIC = []
         SSE = []
@@ -542,49 +522,6 @@ def relabel_data(data_X,K,path,new_labels,data,type=1,cnn_type=None,merge_cnn_la
             delta_AIC.append(AIC[i+1]-AIC[i])
         return AIC.index(min(AIC)) + 2
     
-    # elif type == 4: # dbscan + sihouette_score + bayesian optimization
-    #     global data_bo
-    #     data_bo = data_X
-    #     pbounds = {'epsilon': (0.00000001, 0.1),
-    #            'minimum_samples': (2, 10),
-    #         #    'leaf_size': (20, 40),
-    #            }
-    #     optimizer = BayesianOptimization(
-    #         f=rf_cv,  # 黑盒目标函数
-    #         pbounds=pbounds,  # 取值空间
-    #         verbose=2,  # verbose = 2 时打印全部，verbose = 1 时打印运行中发现的最大值，verbose = 0 将什么都不打印
-    #         random_state=1,
-    #     )
-
-    #     # init_points: 随机搜索的步数, n_iter: # 执行贝叶斯优化迭代次数
-    #     optimizer.maximize(init_points=1, n_iter=1)
-    #     # 得到最优的参数
-    #     optimize_params = optimizer.max['params']
-    #     dbscan_model = DBSCAN(eps=optimize_params['epsilon'], min_samples=optimize_params['minimum_samples'])
-    #     dbscan_model.fit(data_X)
-    #     pred_labels = dbscan_model.labels_  # 得到优化后的标签
-    #     optimal_k = len(np.unique(pred_labels))
-    #     pred_labels_set = list(np.unique(pred_labels))
-    #     # find label map relationship of new_labels and kmeans labels
-    #     new_labels = np.array(new_labels)
-    #     if optimal_k == len(np.unique(new_labels)):
-    #         pred_new_label_dict = {}
-    #         for pred_label in pred_labels_set:
-    #             pred_label_indices = np.where(pred_labels==pred_label)
-    #             new_label_corres = new_labels[pred_label_indices]
-    #             corres_label = max(list(new_label_corres),key=list(new_label_corres).count)
-    #             pred_new_label_dict[pred_label] = corres_label
-    #             # pred_labels = pred_labels.replace(pred_label,corres_label)
-    #             pred_labels[pred_labels==pred_label]=corres_label
-    #         # concat new label and data_X, then save the data
-    #         labels_ = pred_labels.reshape([-1,1])
-    #         data_r = np.concatenate([labels_,data],axis=1)
-    #         print("optimal_k is {}".format(optimal_k))
-    #         return optimal_k, pd.DataFrame(data_r)
-    #     else:
-    #         return optimal_k, None
-
-
     elif type == 5: # silhouette_score + kmeans
         Scores = []
         for k in range(2,K):
@@ -685,14 +622,7 @@ def get_delta_s(seq):
     else:
         return a*math.pow((1-Y+b),len(seq))*(-1)
 
-# def compute_score(seq):
-#     result = s0
-#     for idx in range(len(seq)):
-#         delta = delta_s(seq[:idx+1])
-#         # print(delta)
-#         result += delta
-#         print(result)
-#     return result
+
 def rearrange_labels(old_data_train,new_data_train,old_data_test,new_data_test,path):
 
         # 

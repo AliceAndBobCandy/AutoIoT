@@ -51,18 +51,14 @@ n_unlbl_per_batch = 100 # How many unlabelled samples in a batch.
 norm_imgs_pre_aug = None # do not need here,None, zscoreDb, zscorePerCase, center0sc1, rescale01, zca, zca_center0sc1.
 augm_params = {}
 
-# Augmentation options:
-# augm_params = { "reflect":{"apply": True},
-#    "color_inv": {"apply": False, "params": {"p":0.5}},
-#    "rand_crop": {"apply": False, "params": {'transf':[2,2]}},
-#    "blur": {"apply": False, "params": {'p':0.5, 's':1.0, 'sc':1}} }
+
 
 seed = 1 # for preproduce result
 
 # --- Training loop ---
 #added
 # multi task model
-use_multi_task_model = 4 #1:multi label, 2:multi task 0:original model, 3:single neuron added at last, 4: multi task 24IoT + IoT/NoT
+use_multi_task_model = 4 #should be 4
 #--------------------------
 #-----dynamic cclp loss weight---------------
 dynamic_loss_weight = False
@@ -77,21 +73,16 @@ lr_expon_init = 1e-3 # Only for expon. Initial LR.
 lr_expon_decay_factor = 0.333  # Only for expon. How much to decrease.
 lr_expon_decay_steps = 2000  # Only for expon. How often to decrease.
 
-# # retrain
-# lr_sched_type = 'expon_decay' # 'expon_decay' or 'piecewise'
-# lr_expon_init = 1e-3 # Only for expon. Initial LR.
-# lr_expon_decay_factor = 0.6  # Only for expon. How much to decrease.
-# lr_expon_decay_steps = 400  # Only for expon. How often to decrease.
+
 
 lr_piecewise_boundaries = None # Only for expon. When to change LR.
 lr_piecewise_values = None # Only for expon. Initial and following values.
 
 # --- Compact Clustering via Label Propagation (CCLP) ---
-cc_weight = 3 # Weight w in: Ltotal = Lsup + w*Lcclp . Set to 0 to disable CCLP.
+cc_weight = 10 # Weight w in: Ltotal = Lsup + w*Lcclp . Set to 0 to disable CCLP.
 cc_steps = 3 # Length of longest chain to optimize. Set to 0 to disable CCLP.
 # cc_loss_on = (cc_steps > 0) or (cc_weight > 0) # Set to False to disable.
 cc_loss_on = True
-# cc_loss_distance = 'warsserstein' # wasserstein stands for wasserstein loss, else it is crossentropy warsserstein, crossentropy, ...
 cc_loss_distance = 'crossentropy'
 # Params for creating the graph.
 cc_sim_metric = "dot" # dot or L2, similarity metric for creating the graph.
