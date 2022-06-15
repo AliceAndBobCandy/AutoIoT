@@ -362,9 +362,7 @@ class New_devices(object):
                 whole_num += data_c_X.shape[0]
                 identification_num += data_c_X_filtered.shape[0]   
 
-            # # compute overall accuracy
-            # iot_niot_accuracy_whole = identification_num/whole_num
-            # self.logger.info('test whole iot/non-iot identification accuracy:{}'.format(iot_niot_accuracy_whole))
+            
             
             # -----------------------------find new iot devices---------------------------------------------------  
             
@@ -486,7 +484,6 @@ class New_devices(object):
                             rejudge = 0
                             current_data_Xs = None
 
-                #-----------------------------------------filter new_devices_test_data------------------------------------------------------,change
                 label_result_dict_test = {label:{'res':[],'len':[]} for label in np.unique(self.new_devices_test_data_pd['label'])}
                 filtered_iot_data_new_test = {label:[] for label in filtered_iot_test_data.keys()}
                 for label in filtered_iot_test_data.keys():
@@ -552,7 +549,7 @@ class New_devices(object):
             data = np.concatenate([labels,data_X],axis=1)
             data = pd.DataFrame(data)
             data.to_csv(self.pathToDataFolder +self.new_devices_postfix+'/filtered_new_devices_train_data.csv',index=False,header = self.column_names)
-            # --------------------------------------------save filtered_iot_data_test_new--------------------------------------------------,change
+
             labels = []
             data_X = []
             for label in filtered_iot_data_new_test.keys():
@@ -751,12 +748,9 @@ class New_devices(object):
                         prediction1 = sess.run(predictions_1,feed_dict={input_placeholder_x:train_X_batch,input_placeholder_y:train_y_batch})
         elif type == 2:# semi-supervised model retrain and not recover parameters
             tl = True # transfer learning flag          
-            # self.sessionNModelFlags['max_iters'] = 2000
             sessionNModelFlags = self.sessionNModelFlags
             sessionNModelFlags['session_type'] = 'train'
             trainerFlags = self.trainerFlags
-            # trainerFlags['lr_expon_decay_factor'] = 0.8
-            # trainerFlags['lr_expon_decay_steps'] = 400
             sessionNModelFlags.print_params() #put session, model parameters into sessionNModelFlags class
             trainerFlags.print_params() # put training parameters into trainerFlags class
             

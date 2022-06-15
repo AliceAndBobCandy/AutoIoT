@@ -95,7 +95,7 @@ cc_e_smooth = 0.00001
 cc_optim_smooth_mtx = True
 #===========================================find new devices=================================================
 # new_devices_list = [0,1] # if None, use all data, else the training set should exclude this list
-new_devices_list = None
+new_devices_list = None # use all devices
 if dataset_name == 'tmc':
     niot_label = 24
 else:

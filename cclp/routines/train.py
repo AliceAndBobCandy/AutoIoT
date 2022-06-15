@@ -47,9 +47,6 @@ plot_tsne_flag = False
 
 score_micro_flag = False
 
-## compute last 2 value,if last value exceed a threshold,we assume it is a NoT then its label is 24, 
-# else it is determined by argmax() of the 0-24 value, input is the a batch of logits result of neural network,
-# result is the list of final lbls
 def get_cm_str(cm):
     result = "["
     for idx,row in enumerate(cm):
@@ -280,17 +277,12 @@ def train(sessionNModelFlags, trainerFlags, retrain=False, tl=False, cnn_type=No
             emb_train_sup,
             emb_train_unsup,
             nparr_t_sup_labels
-            # np_t_sup_images,
-            # np_t_unsup_images,
-            # np_t_unsup_labels
+         
             ) = sess.run([ train_op,
                         summary_op,
                         model.tensor_families["train_sup"]["emb_z_tens"],
                         model.tensor_families["train_unsup"]["emb_z_tens"],
                         t_sup_labels
-                        # t_sup_images,
-                        # t_unsup_images,
-                        # t_unsup_labels 
                         ]) # This is the main training step.
 
             model_step = sess.run( increase_model_step_op )

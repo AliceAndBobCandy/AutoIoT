@@ -632,7 +632,7 @@ def rearrange_labels(old_data_train,new_data_train,old_data_test,new_data_test,p
         print(f'old data train labels num:{len(old_data_train_labels)}')
 
         new_rearange_label_dict = {}   
-        new_labels = np.unique(new_data_train['label']) # fmodify
+        new_labels = np.unique(new_data_train['label']) 
         old_labels = np.unique(old_data_train['label'])
         label_non_iot_cur = np.max(old_labels)
         label_non_iot_new = len(new_labels) + np.max(old_labels)

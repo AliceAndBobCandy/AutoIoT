@@ -146,7 +146,7 @@ class DataManager(object):
         #select samples for validation, compute average num_val_samples_per_class, if some class do not have so many, more samples will choosen in other classes.
         val_available_indices_lbl_list_by_class = []
         for c in range(num_classes):
-            indicator_ = dataset_for_val.labels[selected_for_val] == c ##changed by fln
+            indicator_ = dataset_for_val.labels[selected_for_val] == c 
             val_indices_of_lbl_samples_class_c = selected_for_val[ indicator_ ]
             val_available_indices_lbl_list_by_class.append(val_indices_of_lbl_samples_class_c)
         

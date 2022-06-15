@@ -112,11 +112,7 @@ def create_session_folders(main_out_dir): # create output dir according to main_
         os.mkdir(main_out_dir)
     
 def print_param(config_file):
-    # print('session_type:',cfg['session_type'])
-    # print('new_devices_list:',cfg['new_devices_list'])
-    # print('use_cnn_layer_for_cluster:',cfg['use_cnn_layer_for_cluster'])
-    # print('merge_cnn_layer_methods:',cfg['merge_cnn_layer_methods'])
-    # print('upsampling:',cfg['upsampling'])
+    
     for key,value in config_file.items():
         print(key,value)
 
@@ -173,13 +169,7 @@ if __name__ == '__main__':
             trainerFlags = TrainerFlags(cfg) # parameters about trainer
             log.info("================start testing new device finding==================")
             new_devices = New_devices(sessionNModelFlags, trainerFlags,logger) # we use
-            # new_devices = New_devices(sessionNModelFlags, trainerFlags)
-
-            # new_devices.test_new_devices()
-            # discriminator cannot be used 
-            # new_devices.discriminator_create(train=True)
-            # new_devices.discriminator_judge()
-            # new_devices.retrain_model()
+            
         else:
             raise ValueError('Invalid session type: %s' % cfg['session_type'])
     except Exception as e:
