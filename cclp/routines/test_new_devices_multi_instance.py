@@ -338,7 +338,6 @@ class New_devices(object):
             time1 = time.time()
             self.logger.info('iot identification time dur:{}'.format(time1-time0))
 
-            # ---------------------------- also filter new_devices_test_data--------------------------------------, change
             filtered_iot_test_data = {label:{'filtered_data':[],'whole_num':0} for label in np.unique(self.new_devices_test_data_pd['label'])}
             whole_num = 0
             identification_num = 0

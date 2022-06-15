@@ -7,7 +7,7 @@ path = os.path.dirname(os.path.abspath(filename))
 pardir = os.path.dirname(os.path.dirname(path).replace("\\","/"))
 # Variables needed for pre-setting up the session.
 dataset_name = 'tmc' # 
-session_type = 'test' # can be train/test
+session_type = 'train' # can be train/test
 # ========== Variables needed for the session i24,2tself. ========
 # === Variables that are read from the cmd line too. ===
 # WARN: Values given in cmd line overwrite these given below.
